@@ -1,0 +1,9 @@
+body {
+    background-color: rgb(47, 45, 45);
+    }
+h1 {
+    text-align: center;
+}
+h1, p {
+    color: white;
+}
