@@ -8,7 +8,11 @@ h1 {
     text-align: center;
     color: white;
 }
-p {
+pre {
     font-family: "Roboto", Arial;
     color: white;
+    display: inline-block;
+    max-width: 700px;
+    text-wrap-mode: wrap;
+    margin: 5px;
 }
