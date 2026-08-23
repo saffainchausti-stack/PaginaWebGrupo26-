@@ -6,13 +6,10 @@ Para su ejecucion sera necesario:
    git clone -b tp1 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git  
 
 2. Entrar al repositorio:  
-   cd PaginaWebGrupo26-  
+   cd PaginaWebGrupo26-   
 
-3. Cambiar a la branch tp1:  
-   git checkout tp1  
-
-4. Ejecutar el servidor:  
+3. Ejecutar el servidor:  
    go run main.go  
 
-5. Abrir en el navegador:  
+4. Abrir en el navegador:  
    http://localhost:8080  
