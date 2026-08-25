@@ -12,7 +12,7 @@ pre {
     font-family: "Roboto", Arial;
     color: white;
     display: inline-block;
-    max-width: 700px;
+    font-size: 40px;
     text-wrap-mode: wrap;
-    margin: 5px;
+    margin: 20px;
 }
