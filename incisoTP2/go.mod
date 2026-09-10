@@ -1,3 +1,3 @@
-module serverRecetario
+module ServidorTrabajoWeb
 
 go 1.22.2
