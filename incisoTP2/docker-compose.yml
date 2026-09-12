@@ -9,7 +9,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/schema/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./db/schema/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d recetas"]
       interval: 2s
