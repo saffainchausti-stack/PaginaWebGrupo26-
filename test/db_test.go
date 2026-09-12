@@ -1,4 +1,4 @@
-package tests
+package db_test
 
 import (
 	"context"
@@ -10,7 +10,9 @@ import (
 	db "ServidorTrabajoWeb/db/sqlc"
 )
 
+// helper para abrir la conexión de test
 func setupTestDB(t *testing.T) (*db.Queries, *sql.DB) {
+	t.Helper()
 	connStr := "postgres://postgres:postgres@localhost:5432/recetas?sslmode=disable"
 	conn, err := sql.Open("pgx", connStr)
 	if err != nil {
@@ -18,124 +20,397 @@ func setupTestDB(t *testing.T) (*db.Queries, *sql.DB) {
 	}
 
 	if err := conn.Ping(); err != nil {
-		t.Fatalf("No se pudo hacer ping a la base de datos: %v", err)
+		t.Fatalf("No se pudo responder al ping de la base de datos: %v", err)
 	}
 
 	return db.New(conn), conn
 }
 
-func TestDominioRecetasCRUD(t *testing.T) {
+// TestUsuarioCRUD prueba todas las operaciones de usuario definidas en queries.sql
+func TestUsuarioCRUD(t *testing.T) {
 	queries, conn := setupTestDB(t)
 	defer conn.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// 1. TEST USUARIO: Crear un usuario
-	usuarioCreado, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
-		Nombre:      "Chefcito",
-		Apellido:    sql.NullString{String: "Ratatouille", Valid: true},
-		Email:       "chef@recetas.com",
-		Contrasenia: "supersecret123",
+	// 1. CreateUsuario
+	usuario, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+		Nombre:      "Carlos",
+		Apellido:    sql.NullString{String: "Perez", Valid: true},
+		Email:       "carlos.perez@example.com",
+		Contrasenia: "claveSegura123",
 	})
 	if err != nil {
 		t.Fatalf("Fallo CreateUsuario: %v", err)
 	}
 
-	if usuarioCreado.IDUsuario == 0 {
-		t.Errorf("Se esperaba IDUsuario autoincremental > 0, se obtuvo 0")
+	if usuario.IDUsuario == 0 {
+		t.Errorf("Se esperaba IDUsuario mayor a 0, se obtuvo %d", usuario.IDUsuario)
 	}
 
-	// 2. TEST RECETA: Crear una receta vinculada al usuario
-	recetaCreada, err := queries.CreateReceta(ctx, db.CreateRecetaParams{
-		Nombre:       "Guiso de Lentejas",
-		Descripcion:  "Guiso tradicional de invierno",
-		Pasos:        "1. Sofreír verduras. 2. Agregar lentejas y caldo. 3. Cocinar 40 min.",
-		Ingredientes: "Lentejas, cebolla, zanahoria, chorizo colorado, caldo",
-		IDUsuario:    usuarioCreado.IDUsuario,
+	// 2. GetUsuario
+	obtenido, err := queries.GetUsuario(ctx, usuario.IDUsuario)
+	if err != nil {
+		t.Fatalf("Fallo GetUsuario: %v", err)
+	}
+	if obtenido.Email != "carlos.perez@example.com" {
+		t.Errorf("GetUsuario: esperado email 'carlos.perez@example.com', se obtuvo '%s'", obtenido.Email)
+	}
+
+	// 3. GetContrasenia
+	passRow, err := queries.GetContrasenia(ctx, usuario.IDUsuario)
+	if err != nil {
+		t.Fatalf("Fallo GetContrasenia: %v", err)
+	}
+	if passRow.Contrasenia != "claveSegura123" {
+		t.Errorf("GetContrasenia: esperada 'claveSegura123', se obtuvo '%s'", passRow.Contrasenia)
+	}
+
+	// 4. ListUsuario
+	usuarios, err := queries.ListUsuario(ctx)
+	if err != nil {
+		t.Fatalf("Fallo ListUsuario: %v", err)
+	}
+	if len(usuarios) == 0 {
+		t.Errorf("ListUsuario: se esperaba al menos 1 usuario en la lista")
+	}
+
+	// 5. Table-Driven Test para los Updates de Usuario (patrón de la filmina 44 con t.Run)
+	subtests := []struct {
+		nombre string
+		ejecutar func() error
+		verificar func(u db.Usuario) bool
+	}{
+		{
+			nombre: "UpdateUsuarioNombre",
+			ejecutar: func() error {
+				return queries.UpdateUsuarioNombre(ctx, db.UpdateUsuarioNombreParams{
+					IDUsuario: usuario.IDUsuario,
+					Nombre:    "Carlos Alberto",
+				})
+			},
+			verificar: func(u db.Usuario) bool { return u.Nombre == "Carlos Alberto" },
+		},
+		{
+			nombre: "UpdateUsuarioApellido",
+			ejecutar: func() error {
+				return queries.UpdateUsuarioApellido(ctx, db.UpdateUsuarioApellidoParams{
+					IDUsuario: usuario.IDUsuario,
+					Apellido:  sql.NullString{String: "Gomez", Valid: true},
+				})
+			},
+			verificar: func(u db.Usuario) bool { return u.Apellido.String == "Gomez" },
+		},
+		{
+			nombre: "UpdateUsuarioEmail",
+			ejecutar: func() error {
+				return queries.UpdateUsuarioEmail(ctx, db.UpdateUsuarioEmailParams{
+					IDUsuario: usuario.IDUsuario,
+					Email:     "carlos.gomez@example.com",
+				})
+			},
+			verificar: func(u db.Usuario) bool { return u.Email == "carlos.gomez@example.com" },
+		},
+		{
+			nombre: "UpdateUsuarioContrasenia",
+			ejecutar: func() error {
+				return queries.UpdateUsuarioContrasenia(ctx, db.UpdateUsuarioContraseniaParams{
+					IDUsuario:   usuario.IDUsuario,
+					Contrasenia: "nuevaClave456",
+				})
+			},
+			verificar: func(u db.Usuario) bool {
+				p, _ := queries.GetContrasenia(ctx, usuario.IDUsuario)
+				return p.Contrasenia == "nuevaClave456"
+			},
+		},
+	}
+
+	for _, tc := range subtests {
+		t.Run(tc.nombre, func(t *testing.T) {
+			if err := tc.ejecutar(); err != nil {
+				t.Fatalf("Fallo al ejecutar %s: %v", tc.nombre, err)
+			}
+			actualizado, err := queries.GetUsuario(ctx, usuario.IDUsuario)
+			if err != nil {
+				t.Fatalf("Error al recuperar usuario actualizado en %s: %v", tc.nombre, err)
+			}
+			if !tc.verificar(actualizado) {
+				t.Errorf("La verificacion fallo en el subtest %s", tc.nombre)
+			}
+		})
+	}
+
+	// 6. DeleteUsuario
+	err = queries.DeleteUsuario(ctx, usuario.IDUsuario)
+	if err != nil {
+		t.Fatalf("Fallo DeleteUsuario: %v", err)
+	}
+
+	_, err = queries.GetUsuario(ctx, usuario.IDUsuario)
+	if err != sql.ErrNoRows {
+		t.Errorf("Se esperaba sql.ErrNoRows despues de DeleteUsuario, se obtuvo: %v", err)
+	}
+}
+
+// TestRecetaCRUD prueba todas las operaciones de receta definidas en queries.sql
+func TestRecetaCRUD(t *testing.T) {
+	queries, conn := setupTestDB(t)
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Necesitamos un usuario para la Foreign Key
+	autor, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+		Nombre:      "Chef",
+		Apellido:    sql.NullString{String: "Gusteau", Valid: true},
+		Email:       "gusteau@recetas.com",
+		Contrasenia: "anyonecancook",
+	})
+	if err != nil {
+		t.Fatalf("Fallo al crear autor: %v", err)
+	}
+	defer queries.DeleteUsuario(ctx, autor.IDUsuario)
+
+	// 1. CreateReceta
+	receta, err := queries.CreateReceta(ctx, db.CreateRecetaParams{
+		Nombre:       "Ratatouille",
+		Descripcion:  "Guiso clasico de verduras provenzales",
+		Pasos:        "Cortar vegetales en rodajas finas, hornear a fuego lento.",
+		Ingredientes: "Berenjenas, calabacin, pimientos, tomates, aceite de oliva",
+		IDUsuario:    autor.IDUsuario,
 	})
 	if err != nil {
 		t.Fatalf("Fallo CreateReceta: %v", err)
 	}
 
-	if recetaCreada.IDReceta == 0 {
-		t.Errorf("Se esperaba IDReceta > 0")
+	if receta.IDReceta == 0 {
+		t.Errorf("Se esperaba IDReceta mayor a 0, se obtuvo %d", receta.IDReceta)
 	}
 
-	// 3. TEST GET RECETA
-	recetaObtenida, err := queries.GetReceta(ctx, recetaCreada.IDReceta)
+	// 2. GetReceta
+	recetaObtenida, err := queries.GetReceta(ctx, receta.IDReceta)
 	if err != nil {
 		t.Fatalf("Fallo GetReceta: %v", err)
 	}
-	if recetaObtenida.Nombre != "Guiso de Lentejas" {
-		t.Errorf("Se esperaba 'Guiso de Lentejas', se obtuvo: %s", recetaObtenida.Nombre)
+	if recetaObtenida.Nombre != "Ratatouille" {
+		t.Errorf("GetReceta: esperado 'Ratatouille', obtenido '%s'", recetaObtenida.Nombre)
 	}
 
-	// 4. TEST LIST RECETA
+	// 3. ListReceta
 	recetas, err := queries.ListReceta(ctx)
 	if err != nil {
 		t.Fatalf("Fallo ListReceta: %v", err)
 	}
 	if len(recetas) == 0 {
-		t.Errorf("La lista de recetas no debería estar vacía")
+		t.Errorf("ListReceta: no devolvio ninguna receta")
 	}
 
-	// 5. TEST COMENTARIO: Crear comentario en la receta
-	comentarioCreado, err := queries.CreateComentario(ctx, db.CreateComentarioParams{
-		IDUsuario:   usuarioCreado.IDUsuario,
-		IDReceta:    recetaCreada.IDReceta,
-		Descripcion: "¡Quedó espectacular! Muy bien explicados los pasos.",
+	// 4. ListRecetaByUsuario
+	recetasUsuario, err := queries.ListRecetaByUsuario(ctx, autor.IDUsuario)
+	if err != nil {
+		t.Fatalf("Fallo ListRecetaByUsuario: %v", err)
+	}
+	if len(recetasUsuario) != 1 {
+		t.Errorf("ListRecetaByUsuario: esperada 1 receta para el usuario, se obtuvieron %d", len(recetasUsuario))
+	}
+
+	// 5. Subtests para los diferentes Updates de Receta (Table-Driven)
+	casosUpdate := []struct {
+		nombre   string
+		ejecutar func() error
+		validar  func(r db.Receta) bool
+	}{
+		{
+			nombre: "UpdateRecetaNombre",
+			ejecutar: func() error {
+				return queries.UpdateRecetaNombre(ctx, db.UpdateRecetaNombreParams{
+					IDReceta: receta.IDReceta,
+					Nombre:   "Ratatouille Tradicional",
+				})
+			},
+			validar: func(r db.Receta) bool { return r.Nombre == "Ratatouille Tradicional" },
+		},
+		{
+			nombre: "UpdateRecetaDescripcion",
+			ejecutar: func() error {
+				return queries.UpdateRecetaDescripcion(ctx, db.UpdateRecetaDescripcionParams{
+					IDReceta:    receta.IDReceta,
+					Descripcion: "Nueva descripcion gourmet",
+				})
+			},
+			validar: func(r db.Receta) bool { return r.Descripcion == "Nueva descripcion gourmet" },
+		},
+		{
+			nombre: "UpdateRecetaIngredientes",
+			ejecutar: func() error {
+				return queries.UpdateRecetaIngredientes(ctx, db.UpdateRecetaIngredientesParams{
+					IDReceta:     receta.IDReceta,
+					Ingredientes: "Ingredientes agregados: hierbas provenzales",
+				})
+			},
+			validar: func(r db.Receta) bool { return r.Ingredientes == "Ingredientes agregados: hierbas provenzales" },
+		},
+		{
+			nombre: "UpdateRecetaPasos",
+			ejecutar: func() error {
+				return queries.UpdateRecetaPasos(ctx, db.UpdateRecetaPasosParams{
+					IDReceta: receta.IDReceta,
+					Pasos:    "Pasos actualizados: hornear durante 60 minutos.",
+				})
+			},
+			validar: func(r db.Receta) bool { return r.Pasos == "Pasos actualizados: hornear durante 60 minutos." },
+		},
+	}
+
+	for _, tc := range casosUpdate {
+		t.Run(tc.nombre, func(t *testing.T) {
+			if err := tc.ejecutar(); err != nil {
+				t.Fatalf("Fallo en %s: %v", tc.nombre, err)
+			}
+			actual, err := queries.GetReceta(ctx, receta.IDReceta)
+			if err != nil {
+				t.Fatalf("Error al obtener receta en %s: %v", tc.nombre, err)
+			}
+			if !tc.validar(actual) {
+				t.Errorf("Validacion fallida para %s", tc.nombre)
+			}
+		})
+	}
+
+	// 6. DeleteReceta
+	err = queries.DeleteReceta(ctx, receta.IDReceta)
+	if err != nil {
+		t.Fatalf("Fallo DeleteReceta: %v", err)
+	}
+
+	_, err = queries.GetReceta(ctx, receta.IDReceta)
+	if err != sql.ErrNoRows {
+		t.Errorf("Se esperaba sql.ErrNoRows despues de borrar receta, se obtuvo: %v", err)
+	}
+}
+
+// TestComentarioCRUD prueba todas las operaciones de comentario definidas en queries.sql
+func TestComentarioCRUD(t *testing.T) {
+	queries, conn := setupTestDB(t)
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Crear autor y receta para las Foreign Keys
+	usuario, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+		Nombre:      "Critico",
+		Apellido:    sql.NullString{String: "Ego", Valid: true},
+		Email:       "anton.ego@critica.com",
+		Contrasenia: "claveCritico1",
+	})
+	if err != nil {
+		t.Fatalf("Error al crear usuario para comentario: %v", err)
+	}
+	defer queries.DeleteUsuario(ctx, usuario.IDUsuario)
+
+	receta, err := queries.CreateReceta(ctx, db.CreateRecetaParams{
+		Nombre:       "Sopa de Cebolla",
+		Descripcion:  "Sopa clasica francesa con queso gratinado",
+		Pasos:        "Caramelizar cebollas, agregar caldo y servir con pan tostado.",
+		Ingredientes: "Cebollas, manteca, caldo de carne, queso gruyere, pan",
+		IDUsuario:    usuario.IDUsuario,
+	})
+	if err != nil {
+		t.Fatalf("Error al crear receta para comentario: %v", err)
+	}
+	defer queries.DeleteReceta(ctx, receta.IDReceta)
+
+	// 1. CreateComentario
+	comentario, err := queries.CreateComentario(ctx, db.CreateComentarioParams{
+		IDUsuario:   usuario.IDUsuario,
+		IDReceta:    receta.IDReceta,
+		Descripcion: "Sabor excelente, textura perfecta.",
 		Puntuacion:  5,
 	})
 	if err != nil {
 		t.Fatalf("Fallo CreateComentario: %v", err)
 	}
+	if comentario.IDComentario == 0 {
+		t.Errorf("Se esperaba IDComentario mayor a 0, se obtuvo %d", comentario.IDComentario)
+	}
 
-	// 6. TEST LIST COMENTARIOS POR RECETA
-	comentarios, err := queries.ListComentarioByReceta(ctx, recetaCreada.IDReceta)
+	// 2. GetComentario
+	comentarioObtenido, err := queries.GetComentario(ctx, comentario.IDComentario)
+	if err != nil {
+		t.Fatalf("Fallo GetComentario: %v", err)
+	}
+	if comentarioObtenido.Descripcion != "Sabor excelente, textura perfecta." {
+		t.Errorf("GetComentario: descripcion inesperada '%s'", comentarioObtenido.Descripcion)
+	}
+
+	// 3. ListComentarioByReceta
+	listaComentarios, err := queries.ListComentarioByReceta(ctx, receta.IDReceta)
 	if err != nil {
 		t.Fatalf("Fallo ListComentarioByReceta: %v", err)
 	}
-	if len(comentarios) != 1 {
-		t.Errorf("Se esperaba 1 comentario, se encontraron %d", len(comentarios))
+	if len(listaComentarios) != 1 {
+		t.Errorf("ListComentarioByReceta: se esperaba 1 comentario, se encontraron %d", len(listaComentarios))
 	}
 
-	// 7. TEST UPDATE: Modificar nombre de la receta
-	err = queries.UpdateRecetaNombre(ctx, db.UpdateRecetaNombreParams{
-		IDReceta: recetaCreada.IDReceta,
-		Nombre:   "Guiso de Lentejas Casero",
-	})
-	if err != nil {
-		t.Fatalf("Fallo UpdateRecetaNombre: %v", err)
+	// 4. Updates de Comentario (Table-Driven)
+	subtests := []struct {
+		nombre   string
+		ejecutar func() error
+		validar  func(c db.Comentario) bool
+	}{
+		{
+			nombre: "UpdateComentarioDescripcion",
+			ejecutar: func() error {
+				return queries.UpdateComentarioDescripcion(ctx, db.UpdateComentarioDescripcionParams{
+					IDComentario: comentario.IDComentario,
+					Descripcion:  "Actualizada: La mejor que he probado.",
+				})
+			},
+			validar: func(c db.Comentario) bool {
+				return c.Descripcion == "Actualizada: La mejor que he probado."
+			},
+		},
+		{
+			nombre: "UpdateComentarioPuntuacion",
+			ejecutar: func() error {
+				return queries.UpdateComentarioPuntuacion(ctx, db.UpdateComentarioPuntuacionParams{
+					IDComentario: comentario.IDComentario,
+					Puntuacion:   4,
+				})
+			},
+			validar: func(c db.Comentario) bool {
+				return c.Puntuacion == 4
+			},
+		},
 	}
 
-	recetaModificada, err := queries.GetReceta(ctx, recetaCreada.IDReceta)
-	if err != nil {
-		t.Fatalf("Fallo al obtener receta luego de update: %v", err)
-	}
-	if recetaModificada.Nombre != "Guiso de Lentejas Casero" {
-		t.Errorf("Se esperaba nombre actualizado, se obtuvo: %s", recetaModificada.Nombre)
+	for _, tc := range subtests {
+		t.Run(tc.nombre, func(t *testing.T) {
+			if err := tc.ejecutar(); err != nil {
+				t.Fatalf("Fallo en %s: %v", tc.nombre, err)
+			}
+			actual, err := queries.GetComentario(ctx, comentario.IDComentario)
+			if err != nil {
+				t.Fatalf("Error al obtener comentario tras update en %s: %v", tc.nombre, err)
+			}
+			if !tc.validar(actual) {
+				t.Errorf("Validacion fallo en %s", tc.nombre)
+			}
+		})
 	}
 
-	// 8. TEST DELETE (en orden inverso de FK): Comentario -> Receta -> Usuario
-	err = queries.DeleteComentario(ctx, comentarioCreado.IDComentario)
+	// 5. DeleteComentario
+	err = queries.DeleteComentario(ctx, comentario.IDComentario)
 	if err != nil {
 		t.Fatalf("Fallo DeleteComentario: %v", err)
 	}
 
-	err = queries.DeleteReceta(ctx, recetaCreada.IDReceta)
-	if err != nil {
-		t.Fatalf("Fallo DeleteReceta: %v", err)
-	}
-
-	// Verificar que no exista más la receta
-	_, err = queries.GetReceta(ctx, recetaCreada.IDReceta)
+	_, err = queries.GetComentario(ctx, comentario.IDComentario)
 	if err != sql.ErrNoRows {
-		t.Errorf("Se esperaba sql.ErrNoRows para receta eliminada, se obtuvo: %v", err)
-	}
-
-	err = queries.DeleteUsuario(ctx, usuarioCreado.IDUsuario)
-	if err != nil {
-		t.Fatalf("Fallo DeleteUsuario: %v", err)
+		t.Errorf("Se esperaba sql.ErrNoRows luego de borrar el comentario, se obtuvo: %v", err)
 	}
 }
