@@ -6,11 +6,11 @@ h1 {
     font-weight: 400;
     font-style: normal;
     text-align: center;
-    color: orange;
+    color: white;
 }
 pre {
     font-family: "Roboto", Arial;
-    color: orange;
+    color: white;
     display: inline-block;
     font-size: 40px;
     text-wrap-mode: wrap;
