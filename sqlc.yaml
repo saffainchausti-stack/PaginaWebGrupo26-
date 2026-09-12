@@ -8,5 +8,4 @@ sql:
         package: "db"
         out: "./db/sqlc/"
         emit_json_tags: true
-        rename:
-          receta: Receta
+        emit_exact_table_names: true
