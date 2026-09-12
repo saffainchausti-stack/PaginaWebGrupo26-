@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:18
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: recetas
       POSTGRES_USER: postgres
