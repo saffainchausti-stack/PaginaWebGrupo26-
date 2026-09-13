@@ -5,8 +5,7 @@ import (
 	"database/sql"
 	"testing"
 	"time"
-
-	db "ServidorTrabajoWeb/db/sqlc"
+	
 	sqlc "ServidorTrabajoWeb/db/sqlc"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -412,8 +411,8 @@ func TestComentarioCRUD(t *testing.T) {
 	}
 }
 
-func castUsuario(user db.GetUsuarioRow) db.Usuario {
-	userCasteado := db.Usuario{
+func castUsuario(user sqlc.GetUsuarioRow) sqlc.Usuario {
+	userCasteado := sqlc.Usuario{
 		IDUsuario: user.IDUsuario,
 		Nombre:    user.Nombre,
 		Email:     user.Email,
@@ -421,8 +420,8 @@ func castUsuario(user db.GetUsuarioRow) db.Usuario {
 	return userCasteado
 }
 
-func castReceta(recipe db.GetRecetaRow) db.Receta {
-	userCasteado := db.Receta{
+func castReceta(recipe sqlc.GetRecetaRow) sqlc.Receta {
+	userCasteado := sqlc.Receta{
 		IDReceta:     recipe.IDReceta,
 		Nombre:       recipe.Nombre,
 		Descripcion:  recipe.Descripcion,
@@ -432,8 +431,8 @@ func castReceta(recipe db.GetRecetaRow) db.Receta {
 	return userCasteado
 }
 
-func castComentario(comment db.GetComentarioRow) db.Comentario {
-	userCasteado := db.Comentario{
+func castComentario(comment sqlc.GetComentarioRow) sqlc.Comentario {
+	userCasteado := sqlc.Comentario{
 		IDUsuario:    comment.IDUsuario,
 		IDReceta:     comment.IDReceta,
 		IDComentario: comment.IDComentario,
