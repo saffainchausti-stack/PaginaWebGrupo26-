@@ -1,1 +1,8 @@
+# Código generado por sqlc
 db/sqlc/
+# Variables de entorno
+.env
+# Binarios compilados
+bin/
+# Logs
+*.log
