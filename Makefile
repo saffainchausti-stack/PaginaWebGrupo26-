@@ -16,9 +16,6 @@ generate:
 build:
 	@go build ./...
 
-exetest:
-	@go test -v ./test
-
 rmsqlc:
 	@if [ -d "db/sqlc" ]; then rm -r "db/sqlc"; fi
 
