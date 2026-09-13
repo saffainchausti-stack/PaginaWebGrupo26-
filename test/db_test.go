@@ -1,12 +1,12 @@
 package test
 
 import (
-	sqlc "ServidorTrabajoWeb/db/sqlc"
 	"context"
 	"database/sql"
 	"testing"
 	"time"
 
+	sqlc "ServidorTrabajoWeb/db/sqlc"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
