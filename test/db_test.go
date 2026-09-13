@@ -13,13 +13,15 @@ import (
 
 func setupTestDB(t *testing.T) (*sqlc.Queries, *sql.DB) {
 	t.Helper()
-	dbStr := "postgres://postgres:postgres@localhost:5432/recetas?sslmode=disable"
+	dbStr := "host=localhost port=5432 user=postgres password=postgres dbname=recetas sslmode=disable"
 	db, err := sql.Open("pgx", dbStr)
+	
 	if err != nil {
 		t.Fatalf("Error al conectar con la base de datos: %v", err)
 	}
 
 	if err := db.Ping(); err != nil {
+		db.Close()
 		t.Fatalf("No se pudo responder al ping de la base de datos: %v", err)
 	}
 
@@ -38,7 +40,7 @@ func TestUsuarioCRUD(t *testing.T) {
 		Nombre:      "Carlos",
 		Apellido:    sql.NullString{String: "Perez", Valid: true},
 		Email:       "carlos.perez@example.com",
-		Contrasenia: "claveSegura123",
+		Contrasenia: "contra123",
 	})
 	if err != nil {
 		t.Fatalf("Fallo CreateUsuario: %v", err)
@@ -47,6 +49,14 @@ func TestUsuarioCRUD(t *testing.T) {
 	if usuario.IDUsuario == 0 {
 		t.Errorf("Se esperaba IDUsuario mayor a 0, se obtuvo %d", usuario.IDUsuario)
 	}
+	if usuario.Nombre != "Carlos" {
+		t.Errorf("nombre = %s; esperado Carlos", usuario.Nombre)
+	}
+	if usuario.Email != "carlos.perez@example.com" {
+		t.Errorf("email = %s; esperado carlos.perez@example.com", usuario.Email)
+	}
+
+	
 
 	// 2. GetUsuario
 	obtenido, err := queries.GetUsuario(ctx, usuario.IDUsuario)
