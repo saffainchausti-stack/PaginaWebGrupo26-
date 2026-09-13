@@ -2,7 +2,7 @@
 
 #DB_URL := postgres://usuario:password@localhost:5432/mydb?sslmode=disable
 
-.PHONY: up down generate run test rmsqlc
+.PHONY: up down generate exetest test rmsqlc
 
 up:
 	docker compose up -d
@@ -13,11 +13,11 @@ down:
 generate:
 	@sqlc generate
 
-test:
+exetest:
 	go test -v ./test
 
 rmsqlc:
 	if [ -d "db/sqlc" ]; then rm -r "db/sqlc"; fi
 
-run: rmsqlc down up generate test down
+test: rmsqlc down up generate exetest down
 	@air # Ejecuta las tareas de generación configuradas por el proyecto
