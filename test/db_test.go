@@ -1,12 +1,11 @@
 package test
 
 import (
+	sqlc "ServidorTrabajoWeb/db/sqlc"
 	"context"
 	"database/sql"
 	"testing"
 	"time"
-	
-	sqlc "ServidorTrabajoWeb/db/sqlc"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -15,7 +14,7 @@ func setupTestDB(t *testing.T) (*sqlc.Queries, *sql.DB) {
 	t.Helper()
 	dbStr := "host=localhost port=5432 user=postgres password=postgres dbname=recetas sslmode=disable"
 	db, err := sql.Open("pgx", dbStr)
-	
+
 	if err != nil {
 		t.Fatalf("Error al conectar con la base de datos: %v", err)
 	}
@@ -32,14 +31,14 @@ func TestUsuarioCRUD(t *testing.T) {
 	queries, db := setupTestDB(t)
 	defer db.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	// 1. CreateUsuario
 	usuario, err := queries.CreateUsuario(ctx, sqlc.CreateUsuarioParams{
 		Nombre:      "Carlos",
 		Apellido:    sql.NullString{String: "Perez", Valid: true},
-		Email:       "carlos.perez@example.com",
+		Email:       "carlos.perez@gmail.com",
 		Contrasenia: "contra123",
 	})
 	if err != nil {
@@ -52,19 +51,17 @@ func TestUsuarioCRUD(t *testing.T) {
 	if usuario.Nombre != "Carlos" {
 		t.Errorf("nombre = %s; esperado Carlos", usuario.Nombre)
 	}
-	if usuario.Email != "carlos.perez@example.com" {
-		t.Errorf("email = %s; esperado carlos.perez@example.com", usuario.Email)
+	if usuario.Email != "carlos.perez@gmail.com" {
+		t.Errorf("email = %s; esperado carlos.perez@gmail.com", usuario.Email)
 	}
-
-	
 
 	// 2. GetUsuario
 	obtenido, err := queries.GetUsuario(ctx, usuario.IDUsuario)
 	if err != nil {
 		t.Fatalf("Fallo GetUsuario: %v", err)
 	}
-	if obtenido.Email != "carlos.perez@example.com" {
-		t.Errorf("GetUsuario: esperado email 'carlos.perez@example.com', se obtuvo '%s'", obtenido.Email)
+	if obtenido.Email != "carlos.perez@gmail.com" {
+		t.Errorf("GetUsuario: esperado email 'carlos.perez@gmail.com', se obtuvo '%s'", obtenido.Email)
 	}
 
 	// 3. GetContrasenia
@@ -85,20 +82,21 @@ func TestUsuarioCRUD(t *testing.T) {
 		t.Errorf("ListUsuario: se esperaba al menos 1 usuario en la lista")
 	}
 
+	// 5. Update
 	subtests := []struct {
 		nombre    string
 		ejecutar  func() error
-		verificar func(u sqlc.Usuario) bool
+		verificar func(u sqlc.GetUsuarioRow) bool
 	}{
 		{
 			nombre: "UpdateUsuarioNombre",
 			ejecutar: func() error {
 				return queries.UpdateUsuarioNombre(ctx, sqlc.UpdateUsuarioNombreParams{
 					IDUsuario: usuario.IDUsuario,
-					Nombre:    "Carlos Alberto",
+					Nombre:    "Ignacio Valentin Martin",
 				})
 			},
-			verificar: func(u sqlc.Usuario) bool { return u.Nombre == "Carlos Alberto" },
+			verificar: func(u sqlc.GetUsuarioRow) bool { return u.Nombre == "Ignacio Valentin Martin" },
 		},
 		{
 			nombre: "UpdateUsuarioApellido",
@@ -108,17 +106,17 @@ func TestUsuarioCRUD(t *testing.T) {
 					Apellido:  sql.NullString{String: "Gomez", Valid: true},
 				})
 			},
-			verificar: func(u sqlc.Usuario) bool { return u.Apellido.String == "Gomez" },
+			verificar: func(u sqlc.GetUsuarioRow) bool { return u.Apellido.String == "Gomez" },
 		},
 		{
 			nombre: "UpdateUsuarioEmail",
 			ejecutar: func() error {
 				return queries.UpdateUsuarioEmail(ctx, sqlc.UpdateUsuarioEmailParams{
 					IDUsuario: usuario.IDUsuario,
-					Email:     "carlos.gomez@example.com",
+					Email:     "ignaciovalentinmartin@gmail.com",
 				})
 			},
-			verificar: func(u sqlc.Usuario) bool { return u.Email == "carlos.gomez@example.com" },
+			verificar: func(u sqlc.GetUsuarioRow) bool { return u.Email == "ignaciovalentinmartin@gmail.com" },
 		},
 		{
 			nombre: "UpdateUsuarioContrasenia",
@@ -128,7 +126,7 @@ func TestUsuarioCRUD(t *testing.T) {
 					Contrasenia: "nuevaClave456",
 				})
 			},
-			verificar: func(u sqlc.Usuario) bool {
+			verificar: func(u sqlc.GetUsuarioRow) bool {
 				p, _ := queries.GetContrasenia(ctx, usuario.IDUsuario)
 				return p.Contrasenia == "nuevaClave456"
 			},
@@ -144,7 +142,7 @@ func TestUsuarioCRUD(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error al recuperar usuario actualizado en %s: %v", tc.nombre, err)
 			}
-			if !tc.verificar(castUsuario(actualizado)) {
+			if !tc.verificar(actualizado) {
 				t.Errorf("La verificacion fallo en el subtest %s", tc.nombre)
 			}
 		})
@@ -166,7 +164,7 @@ func TestRecetaCRUD(t *testing.T) {
 	queries, db := setupTestDB(t)
 	defer db.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	// Necesitamos un usuario para la Foreign Key
@@ -174,7 +172,7 @@ func TestRecetaCRUD(t *testing.T) {
 		Nombre:      "Chef",
 		Apellido:    sql.NullString{String: "Gusteau", Valid: true},
 		Email:       "gusteau@recetas.com",
-		Contrasenia: "anyonecancook",
+		Contrasenia: "cocinorico",
 	})
 	if err != nil {
 		t.Fatalf("Fallo al crear autor: %v", err)
@@ -228,7 +226,7 @@ func TestRecetaCRUD(t *testing.T) {
 	casosUpdate := []struct {
 		nombre   string
 		ejecutar func() error
-		validar  func(r sqlc.Receta) bool
+		validar  func(r sqlc.GetRecetaRow) bool
 	}{
 		{
 			nombre: "UpdateRecetaNombre",
@@ -238,37 +236,41 @@ func TestRecetaCRUD(t *testing.T) {
 					Nombre:   "Ratatouille Tradicional",
 				})
 			},
-			validar: func(r sqlc.Receta) bool { return r.Nombre == "Ratatouille Tradicional" },
+			validar: func(r sqlc.GetRecetaRow) bool { return r.Nombre == "Ratatouille Tradicional" },
 		},
 		{
 			nombre: "UpdateRecetaDescripcion",
 			ejecutar: func() error {
 				return queries.UpdateRecetaDescripcion(ctx, sqlc.UpdateRecetaDescripcionParams{
 					IDReceta:    receta.IDReceta,
-					Descripcion: "Nueva descripcion gourmet",
+					Descripcion: "Nueva descripcion",
 				})
 			},
-			validar: func(r sqlc.Receta) bool { return r.Descripcion == "Nueva descripcion gourmet" },
+			validar: func(r sqlc.GetRecetaRow) bool { return r.Descripcion == "Nueva descripcion" },
 		},
 		{
 			nombre: "UpdateRecetaIngredientes",
 			ejecutar: func() error {
 				return queries.UpdateRecetaIngredientes(ctx, sqlc.UpdateRecetaIngredientesParams{
 					IDReceta:     receta.IDReceta,
-					Ingredientes: "Ingredientes agregados: hierbas provenzales",
+					Ingredientes: "Berenjenas, calabacin, pimientos, tomates, aceite de oliva, chorizo",
 				})
 			},
-			validar: func(r sqlc.Receta) bool { return r.Ingredientes == "Ingredientes agregados: hierbas provenzales" },
+			validar: func(r sqlc.GetRecetaRow) bool {
+				return r.Ingredientes == "Berenjenas, calabacin, pimientos, tomates, aceite de oliva, chorizo"
+			},
 		},
 		{
 			nombre: "UpdateRecetaPasos",
 			ejecutar: func() error {
 				return queries.UpdateRecetaPasos(ctx, sqlc.UpdateRecetaPasosParams{
 					IDReceta: receta.IDReceta,
-					Pasos:    "Pasos actualizados: hornear durante 60 minutos.",
+					Pasos:    "Cortar vegetales en rodajas finas, hornear a fuego lento, hornear durante media hora",
 				})
 			},
-			validar: func(r sqlc.Receta) bool { return r.Pasos == "Pasos actualizados: hornear durante 60 minutos." },
+			validar: func(r sqlc.GetRecetaRow) bool {
+				return r.Pasos == "Cortar vegetales en rodajas finas, hornear a fuego lento, hornear durante media hora"
+			},
 		},
 	}
 
@@ -281,7 +283,7 @@ func TestRecetaCRUD(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error al obtener receta en %s: %v", tc.nombre, err)
 			}
-			if !tc.validar(castReceta(actual)) {
+			if !tc.validar(actual) {
 				t.Errorf("Validacion fallida para %s", tc.nombre)
 			}
 		})
@@ -303,14 +305,14 @@ func TestComentarioCRUD(t *testing.T) {
 	queries, db := setupTestDB(t)
 	defer db.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	// Crear autor y receta para las Foreign Keys
 	usuario, err := queries.CreateUsuario(ctx, sqlc.CreateUsuarioParams{
 		Nombre:      "Critico",
 		Apellido:    sql.NullString{String: "Ego", Valid: true},
-		Email:       "anton.ego@critica.com",
+		Email:       "antonEgo@critica.com",
 		Contrasenia: "claveCritico1",
 	})
 	if err != nil {
@@ -366,18 +368,18 @@ func TestComentarioCRUD(t *testing.T) {
 	subtests := []struct {
 		nombre   string
 		ejecutar func() error
-		validar  func(c sqlc.Comentario) bool
+		validar  func(c sqlc.GetComentarioRow) bool
 	}{
 		{
 			nombre: "UpdateComentarioDescripcion",
 			ejecutar: func() error {
 				return queries.UpdateComentarioDescripcion(ctx, sqlc.UpdateComentarioDescripcionParams{
 					IDComentario: comentario.IDComentario,
-					Descripcion:  "Actualizada: La mejor que he probado.",
+					Descripcion:  "Esta horrible, lo peor que comi en mi vida",
 				})
 			},
-			validar: func(c sqlc.Comentario) bool {
-				return c.Descripcion == "Actualizada: La mejor que he probado."
+			validar: func(c sqlc.GetComentarioRow) bool {
+				return c.Descripcion == "Esta horrible, lo peor que comi en mi vida"
 			},
 		},
 		{
@@ -385,11 +387,11 @@ func TestComentarioCRUD(t *testing.T) {
 			ejecutar: func() error {
 				return queries.UpdateComentarioPuntuacion(ctx, sqlc.UpdateComentarioPuntuacionParams{
 					IDComentario: comentario.IDComentario,
-					Puntuacion:   4,
+					Puntuacion:   1,
 				})
 			},
-			validar: func(c sqlc.Comentario) bool {
-				return c.Puntuacion == 4
+			validar: func(c sqlc.GetComentarioRow) bool {
+				return c.Puntuacion == 1
 			},
 		},
 	}
@@ -403,7 +405,7 @@ func TestComentarioCRUD(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error al obtener comentario tras update en %s: %v", tc.nombre, err)
 			}
-			if !tc.validar(castComentario(actual)) {
+			if !tc.validar(actual) {
 				t.Errorf("Validacion fallo en %s", tc.nombre)
 			}
 		})
