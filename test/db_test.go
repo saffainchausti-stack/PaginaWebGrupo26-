@@ -72,8 +72,8 @@ func TestUsuarioCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Fallo GetContrasenia: %v", err)
 	}
-	if passRow.Contrasenia != "claveSegura123" {
-		t.Errorf("GetContrasenia: esperada 'claveSegura123', se obtuvo '%s'", passRow.Contrasenia)
+	if passRow.Contrasenia != "contra123" {
+		t.Errorf("GetContrasenia: esperada 'contra123', se obtuvo '%s'", passRow.Contrasenia)
 	}
 
 	// 4. ListUsuario
@@ -419,34 +419,4 @@ func TestComentarioCRUD(t *testing.T) {
 	if err != sql.ErrNoRows {
 		t.Errorf("Se esperaba sql.ErrNoRows luego de borrar el comentario, se obtuvo: %v", err)
 	}
-}
-
-func castUsuario(user sqlc.GetUsuarioRow) sqlc.Usuario {
-	userCasteado := sqlc.Usuario{
-		IDUsuario: user.IDUsuario,
-		Nombre:    user.Nombre,
-		Email:     user.Email,
-		Apellido:  user.Apellido}
-	return userCasteado
-}
-
-func castReceta(recipe sqlc.GetRecetaRow) sqlc.Receta {
-	userCasteado := sqlc.Receta{
-		IDReceta:     recipe.IDReceta,
-		Nombre:       recipe.Nombre,
-		Descripcion:  recipe.Descripcion,
-		Ingredientes: recipe.Ingredientes,
-		IDUsuario:    recipe.IDUsuario,
-		Pasos:        recipe.Pasos}
-	return userCasteado
-}
-
-func castComentario(comment sqlc.GetComentarioRow) sqlc.Comentario {
-	userCasteado := sqlc.Comentario{
-		IDUsuario:    comment.IDUsuario,
-		IDReceta:     comment.IDReceta,
-		IDComentario: comment.IDComentario,
-		Descripcion:  comment.Descripcion,
-		Puntuacion:   comment.Puntuacion}
-	return userCasteado
 }
