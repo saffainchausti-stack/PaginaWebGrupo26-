@@ -2,7 +2,7 @@
 
 #DB_URL := postgres://usuario:password@localhost:5432/mydb?sslmode=disable
 
-.PHONY: up down generate exetest test rmsqlc
+.PHONY: up down generate build exetest test rmsqlc
 
 up:
 	@docker compose up -d --wait
@@ -22,4 +22,8 @@ exetest:
 rmsqlc:
 	@if [ -d "db/sqlc" ]; then rm -r "db/sqlc"; fi
 
-test: rmsqlc down generate build up exetest down
+test: rmsqlc down generate build up exetest 
+	@go test -v ./test; \
+	status=$$?; \
+	docker compose down -v; \
+	exit $$status
