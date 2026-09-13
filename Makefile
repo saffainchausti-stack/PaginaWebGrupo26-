@@ -19,5 +19,5 @@ test:
 rmsqlc:
 	if [ -d "db/sqlc" ]; then rm -r "db/sqlc"; fi
 
-run: down up rmsqlc generate test down
+run: rmsqlc down up generate test down
 	@air # Ejecuta las tareas de generación configuradas por el proyecto
