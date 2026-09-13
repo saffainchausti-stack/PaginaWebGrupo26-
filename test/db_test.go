@@ -6,36 +6,36 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
 	db "ServidorTrabajoWeb/db/sqlc"
+	sqlc "ServidorTrabajoWeb/db/sqlc"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// helper para abrir la conexión de test
-func setupTestDB(t *testing.T) (*db.Queries, *sql.DB) {
+func setupTestDB(t *testing.T) (*sqlc.Queries, *sql.DB) {
 	t.Helper()
-	connStr := "postgres://postgres:postgres@localhost:5432/recetas?sslmode=disable"
-	conn, err := sql.Open("pgx", connStr)
+	dbStr := "postgres://postgres:postgres@localhost:5432/recetas?sslmode=disable"
+	db, err := sql.Open("pgx", dbStr)
 	if err != nil {
 		t.Fatalf("Error al conectar con la base de datos: %v", err)
 	}
 
-	if err := conn.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		t.Fatalf("No se pudo responder al ping de la base de datos: %v", err)
 	}
 
-	return db.New(conn), conn
+	return sqlc.New(db), db
 }
 
-// TestUsuarioCRUD prueba todas las operaciones de usuario definidas en queries.sql
 func TestUsuarioCRUD(t *testing.T) {
-	queries, conn := setupTestDB(t)
-	defer conn.Close()
+	queries, db := setupTestDB(t)
+	defer db.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// 1. CreateUsuario
-	usuario, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+	usuario, err := queries.CreateUsuario(ctx, sqlc.CreateUsuarioParams{
 		Nombre:      "Carlos",
 		Apellido:    sql.NullString{String: "Perez", Valid: true},
 		Email:       "carlos.perez@example.com",
@@ -76,51 +76,50 @@ func TestUsuarioCRUD(t *testing.T) {
 		t.Errorf("ListUsuario: se esperaba al menos 1 usuario en la lista")
 	}
 
-	// 5. Table-Driven Test para los Updates de Usuario (patrón de la filmina 44 con t.Run)
 	subtests := []struct {
-		nombre string
-		ejecutar func() error
-		verificar func(u db.Usuario) bool
+		nombre    string
+		ejecutar  func() error
+		verificar func(u sqlc.Usuario) bool
 	}{
 		{
 			nombre: "UpdateUsuarioNombre",
 			ejecutar: func() error {
-				return queries.UpdateUsuarioNombre(ctx, db.UpdateUsuarioNombreParams{
+				return queries.UpdateUsuarioNombre(ctx, sqlc.UpdateUsuarioNombreParams{
 					IDUsuario: usuario.IDUsuario,
 					Nombre:    "Carlos Alberto",
 				})
 			},
-			verificar: func(u db.Usuario) bool { return u.Nombre == "Carlos Alberto" },
+			verificar: func(u sqlc.Usuario) bool { return u.Nombre == "Carlos Alberto" },
 		},
 		{
 			nombre: "UpdateUsuarioApellido",
 			ejecutar: func() error {
-				return queries.UpdateUsuarioApellido(ctx, db.UpdateUsuarioApellidoParams{
+				return queries.UpdateUsuarioApellido(ctx, sqlc.UpdateUsuarioApellidoParams{
 					IDUsuario: usuario.IDUsuario,
 					Apellido:  sql.NullString{String: "Gomez", Valid: true},
 				})
 			},
-			verificar: func(u db.Usuario) bool { return u.Apellido.String == "Gomez" },
+			verificar: func(u sqlc.Usuario) bool { return u.Apellido.String == "Gomez" },
 		},
 		{
 			nombre: "UpdateUsuarioEmail",
 			ejecutar: func() error {
-				return queries.UpdateUsuarioEmail(ctx, db.UpdateUsuarioEmailParams{
+				return queries.UpdateUsuarioEmail(ctx, sqlc.UpdateUsuarioEmailParams{
 					IDUsuario: usuario.IDUsuario,
 					Email:     "carlos.gomez@example.com",
 				})
 			},
-			verificar: func(u db.Usuario) bool { return u.Email == "carlos.gomez@example.com" },
+			verificar: func(u sqlc.Usuario) bool { return u.Email == "carlos.gomez@example.com" },
 		},
 		{
 			nombre: "UpdateUsuarioContrasenia",
 			ejecutar: func() error {
-				return queries.UpdateUsuarioContrasenia(ctx, db.UpdateUsuarioContraseniaParams{
+				return queries.UpdateUsuarioContrasenia(ctx, sqlc.UpdateUsuarioContraseniaParams{
 					IDUsuario:   usuario.IDUsuario,
 					Contrasenia: "nuevaClave456",
 				})
 			},
-			verificar: func(u db.Usuario) bool {
+			verificar: func(u sqlc.Usuario) bool {
 				p, _ := queries.GetContrasenia(ctx, usuario.IDUsuario)
 				return p.Contrasenia == "nuevaClave456"
 			},
@@ -136,7 +135,7 @@ func TestUsuarioCRUD(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error al recuperar usuario actualizado en %s: %v", tc.nombre, err)
 			}
-			if !tc.verificar(actualizado) {
+			if !tc.verificar(castUsuario(actualizado)) {
 				t.Errorf("La verificacion fallo en el subtest %s", tc.nombre)
 			}
 		})
@@ -154,16 +153,15 @@ func TestUsuarioCRUD(t *testing.T) {
 	}
 }
 
-// TestRecetaCRUD prueba todas las operaciones de receta definidas en queries.sql
 func TestRecetaCRUD(t *testing.T) {
-	queries, conn := setupTestDB(t)
-	defer conn.Close()
+	queries, db := setupTestDB(t)
+	defer db.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Necesitamos un usuario para la Foreign Key
-	autor, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+	autor, err := queries.CreateUsuario(ctx, sqlc.CreateUsuarioParams{
 		Nombre:      "Chef",
 		Apellido:    sql.NullString{String: "Gusteau", Valid: true},
 		Email:       "gusteau@recetas.com",
@@ -175,7 +173,7 @@ func TestRecetaCRUD(t *testing.T) {
 	defer queries.DeleteUsuario(ctx, autor.IDUsuario)
 
 	// 1. CreateReceta
-	receta, err := queries.CreateReceta(ctx, db.CreateRecetaParams{
+	receta, err := queries.CreateReceta(ctx, sqlc.CreateRecetaParams{
 		Nombre:       "Ratatouille",
 		Descripcion:  "Guiso clasico de verduras provenzales",
 		Pasos:        "Cortar vegetales en rodajas finas, hornear a fuego lento.",
@@ -217,51 +215,51 @@ func TestRecetaCRUD(t *testing.T) {
 		t.Errorf("ListRecetaByUsuario: esperada 1 receta para el usuario, se obtuvieron %d", len(recetasUsuario))
 	}
 
-	// 5. Subtests para los diferentes Updates de Receta (Table-Driven)
+	// 5. Subtests para los diferentes Updates de Receta
 	casosUpdate := []struct {
 		nombre   string
 		ejecutar func() error
-		validar  func(r db.Receta) bool
+		validar  func(r sqlc.Receta) bool
 	}{
 		{
 			nombre: "UpdateRecetaNombre",
 			ejecutar: func() error {
-				return queries.UpdateRecetaNombre(ctx, db.UpdateRecetaNombreParams{
+				return queries.UpdateRecetaNombre(ctx, sqlc.UpdateRecetaNombreParams{
 					IDReceta: receta.IDReceta,
 					Nombre:   "Ratatouille Tradicional",
 				})
 			},
-			validar: func(r db.Receta) bool { return r.Nombre == "Ratatouille Tradicional" },
+			validar: func(r sqlc.Receta) bool { return r.Nombre == "Ratatouille Tradicional" },
 		},
 		{
 			nombre: "UpdateRecetaDescripcion",
 			ejecutar: func() error {
-				return queries.UpdateRecetaDescripcion(ctx, db.UpdateRecetaDescripcionParams{
+				return queries.UpdateRecetaDescripcion(ctx, sqlc.UpdateRecetaDescripcionParams{
 					IDReceta:    receta.IDReceta,
 					Descripcion: "Nueva descripcion gourmet",
 				})
 			},
-			validar: func(r db.Receta) bool { return r.Descripcion == "Nueva descripcion gourmet" },
+			validar: func(r sqlc.Receta) bool { return r.Descripcion == "Nueva descripcion gourmet" },
 		},
 		{
 			nombre: "UpdateRecetaIngredientes",
 			ejecutar: func() error {
-				return queries.UpdateRecetaIngredientes(ctx, db.UpdateRecetaIngredientesParams{
+				return queries.UpdateRecetaIngredientes(ctx, sqlc.UpdateRecetaIngredientesParams{
 					IDReceta:     receta.IDReceta,
 					Ingredientes: "Ingredientes agregados: hierbas provenzales",
 				})
 			},
-			validar: func(r db.Receta) bool { return r.Ingredientes == "Ingredientes agregados: hierbas provenzales" },
+			validar: func(r sqlc.Receta) bool { return r.Ingredientes == "Ingredientes agregados: hierbas provenzales" },
 		},
 		{
 			nombre: "UpdateRecetaPasos",
 			ejecutar: func() error {
-				return queries.UpdateRecetaPasos(ctx, db.UpdateRecetaPasosParams{
+				return queries.UpdateRecetaPasos(ctx, sqlc.UpdateRecetaPasosParams{
 					IDReceta: receta.IDReceta,
 					Pasos:    "Pasos actualizados: hornear durante 60 minutos.",
 				})
 			},
-			validar: func(r db.Receta) bool { return r.Pasos == "Pasos actualizados: hornear durante 60 minutos." },
+			validar: func(r sqlc.Receta) bool { return r.Pasos == "Pasos actualizados: hornear durante 60 minutos." },
 		},
 	}
 
@@ -274,7 +272,7 @@ func TestRecetaCRUD(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error al obtener receta en %s: %v", tc.nombre, err)
 			}
-			if !tc.validar(actual) {
+			if !tc.validar(castReceta(actual)) {
 				t.Errorf("Validacion fallida para %s", tc.nombre)
 			}
 		})
@@ -292,16 +290,15 @@ func TestRecetaCRUD(t *testing.T) {
 	}
 }
 
-// TestComentarioCRUD prueba todas las operaciones de comentario definidas en queries.sql
 func TestComentarioCRUD(t *testing.T) {
-	queries, conn := setupTestDB(t)
-	defer conn.Close()
+	queries, db := setupTestDB(t)
+	defer db.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Crear autor y receta para las Foreign Keys
-	usuario, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+	usuario, err := queries.CreateUsuario(ctx, sqlc.CreateUsuarioParams{
 		Nombre:      "Critico",
 		Apellido:    sql.NullString{String: "Ego", Valid: true},
 		Email:       "anton.ego@critica.com",
@@ -312,7 +309,7 @@ func TestComentarioCRUD(t *testing.T) {
 	}
 	defer queries.DeleteUsuario(ctx, usuario.IDUsuario)
 
-	receta, err := queries.CreateReceta(ctx, db.CreateRecetaParams{
+	receta, err := queries.CreateReceta(ctx, sqlc.CreateRecetaParams{
 		Nombre:       "Sopa de Cebolla",
 		Descripcion:  "Sopa clasica francesa con queso gratinado",
 		Pasos:        "Caramelizar cebollas, agregar caldo y servir con pan tostado.",
@@ -325,7 +322,7 @@ func TestComentarioCRUD(t *testing.T) {
 	defer queries.DeleteReceta(ctx, receta.IDReceta)
 
 	// 1. CreateComentario
-	comentario, err := queries.CreateComentario(ctx, db.CreateComentarioParams{
+	comentario, err := queries.CreateComentario(ctx, sqlc.CreateComentarioParams{
 		IDUsuario:   usuario.IDUsuario,
 		IDReceta:    receta.IDReceta,
 		Descripcion: "Sabor excelente, textura perfecta.",
@@ -356,33 +353,33 @@ func TestComentarioCRUD(t *testing.T) {
 		t.Errorf("ListComentarioByReceta: se esperaba 1 comentario, se encontraron %d", len(listaComentarios))
 	}
 
-	// 4. Updates de Comentario (Table-Driven)
+	// 4. Updates de Comentario
 	subtests := []struct {
 		nombre   string
 		ejecutar func() error
-		validar  func(c db.Comentario) bool
+		validar  func(c sqlc.Comentario) bool
 	}{
 		{
 			nombre: "UpdateComentarioDescripcion",
 			ejecutar: func() error {
-				return queries.UpdateComentarioDescripcion(ctx, db.UpdateComentarioDescripcionParams{
+				return queries.UpdateComentarioDescripcion(ctx, sqlc.UpdateComentarioDescripcionParams{
 					IDComentario: comentario.IDComentario,
 					Descripcion:  "Actualizada: La mejor que he probado.",
 				})
 			},
-			validar: func(c db.Comentario) bool {
+			validar: func(c sqlc.Comentario) bool {
 				return c.Descripcion == "Actualizada: La mejor que he probado."
 			},
 		},
 		{
 			nombre: "UpdateComentarioPuntuacion",
 			ejecutar: func() error {
-				return queries.UpdateComentarioPuntuacion(ctx, db.UpdateComentarioPuntuacionParams{
+				return queries.UpdateComentarioPuntuacion(ctx, sqlc.UpdateComentarioPuntuacionParams{
 					IDComentario: comentario.IDComentario,
 					Puntuacion:   4,
 				})
 			},
-			validar: func(c db.Comentario) bool {
+			validar: func(c sqlc.Comentario) bool {
 				return c.Puntuacion == 4
 			},
 		},
@@ -397,7 +394,7 @@ func TestComentarioCRUD(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error al obtener comentario tras update en %s: %v", tc.nombre, err)
 			}
-			if !tc.validar(actual) {
+			if !tc.validar(castComentario(actual)) {
 				t.Errorf("Validacion fallo en %s", tc.nombre)
 			}
 		})
@@ -413,4 +410,34 @@ func TestComentarioCRUD(t *testing.T) {
 	if err != sql.ErrNoRows {
 		t.Errorf("Se esperaba sql.ErrNoRows luego de borrar el comentario, se obtuvo: %v", err)
 	}
+}
+
+func castUsuario(user db.GetUsuarioRow) db.Usuario {
+	userCasteado := db.Usuario{
+		IDUsuario: user.IDUsuario,
+		Nombre:    user.Nombre,
+		Email:     user.Email,
+		Apellido:  user.Apellido}
+	return userCasteado
+}
+
+func castReceta(recipe db.GetRecetaRow) db.Receta {
+	userCasteado := db.Receta{
+		IDReceta:     recipe.IDReceta,
+		Nombre:       recipe.Nombre,
+		Descripcion:  recipe.Descripcion,
+		Ingredientes: recipe.Ingredientes,
+		IDUsuario:    recipe.IDUsuario,
+		Pasos:        recipe.Pasos}
+	return userCasteado
+}
+
+func castComentario(comment db.GetComentarioRow) db.Comentario {
+	userCasteado := db.Comentario{
+		IDUsuario:    comment.IDUsuario,
+		IDReceta:     comment.IDReceta,
+		IDComentario: comment.IDComentario,
+		Descripcion:  comment.Descripcion,
+		Puntuacion:   comment.Puntuacion}
+	return userCasteado
 }
