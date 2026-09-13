@@ -5,19 +5,21 @@
 .PHONY: up down generate exetest test rmsqlc
 
 up:
-	docker compose up -d
+	@docker compose up -d --wait
 
 down:
-	docker compose down -v
+	@docker compose down -v
 
 generate:
 	@sqlc generate
 
+build:
+	@go build ./...
+
 exetest:
-	go test -v ./test
+	@go test -v ./test
 
 rmsqlc:
-	if [ -d "db/sqlc" ]; then rm -r "db/sqlc"; fi
+	@if [ -d "db/sqlc" ]; then rm -r "db/sqlc"; fi
 
-test: rmsqlc down up generate exetest down
-	@air # Ejecuta las tareas de generación configuradas por el proyecto
+test: rmsqlc down generate build up exetest down
