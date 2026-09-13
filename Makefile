@@ -22,7 +22,7 @@ exetest:
 rmsqlc:
 	@if [ -d "db/sqlc" ]; then rm -r "db/sqlc"; fi
 
-test: rmsqlc down generate build up exetest 
+test: rmsqlc down generate build up 
 	@go test -v ./test; \
 	status=$$?; \
 	docker compose down -v; \
