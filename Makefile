@@ -20,7 +20,7 @@ rmsqlc:
 	@rm -rf db/sqlc
 
 test: rmsqlc down generate build up 
-	@go test -v ./test; \
+	@go test -v -count=1 ./test; \
 	status=$$?; \
 	docker compose down -v; \
 	exit $$status
