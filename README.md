@@ -1,8 +1,8 @@
 # Para probar los tests ejecutar los siguientes comandos
 
-git clone -b tp2 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git
-cd PaginaWebGrupo26-
-make test
+git clone -b tp2 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git  
+cd PaginaWebGrupo26-  
+make test  
 
 # Requisitos  
 Para compilar, ejecutar y probar este proyecto es necesario contar con:
