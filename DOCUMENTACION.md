@@ -144,17 +144,17 @@ El proyecto incluye un Makefile para automatizar las tareas necesarias para ejec
 
 El comando principal para ejecutar las pruebas es `make test`
 El proceso realiza las siguientes tareas:
-1.Eliminar código generado anteriormente, chequeando antes si hay codigo generado por el sqlc generate (if [ -d "db/sqlc" ]; then rm -r "db/sqlc"; fi)
+1.Eliminar código generado anteriormente, chequeando antes si hay codigo generado por el sqlc generate (rm -fr "db/sqlc")
 2.Eliminar contenedores y volúmenes anteriores (docker compose down -v)
 3.Generar nuevamente el código con sqlc (slqc generate)
 4. Compilar el proyecto (go build ./...)
 5. Levantar PostgreSQL (docker compose up -d)
 6. Esperar a que PostgreSQL esté disponible (mediante la opcion --wait de docker compose up -d y el healtcheck que pusimos en el docker-compose.yml)
-7. Ejecutar los tests (go test -v ./test)
+7. Ejecutar los tests, haciendo -count=1 para asegurarnos que haga el test y no utilice cache (go test -v -count=1 ./test)
 8. Eliminar contenedor y volumenes (docker compose down -v)
 
 Para estos dos ultimos pasos tuvimos que poner 
-    "go test -v ./test; \
+    "go test -v -count=1 ./test; \
     status=$$?; \
     docker compose down -v; \
     exit $$status" 
