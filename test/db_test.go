@@ -384,7 +384,7 @@ func TestComentarioCRUD(t *testing.T) {
 	subtests := []struct {
 		nombre   string
 		ejecutar func() error
-		validar  func(c sqlc.GetComentarioRow) bool
+		validar  func(c sqlc.Comentario) bool
 	}{
 		{
 			nombre: "UpdateComentarioDescripcion",
@@ -394,7 +394,7 @@ func TestComentarioCRUD(t *testing.T) {
 					Descripcion:  "Esta horrible, lo peor que comi en mi vida",
 				})
 			},
-			validar: func(c sqlc.GetComentarioRow) bool {
+			validar: func(c sqlc.Comentario) bool {
 				return c.Descripcion == "Esta horrible, lo peor que comi en mi vida"
 			},
 		},
@@ -406,7 +406,7 @@ func TestComentarioCRUD(t *testing.T) {
 					Puntuacion:   1,
 				})
 			},
-			validar: func(c sqlc.GetComentarioRow) bool {
+			validar: func(c sqlc.Comentario) bool {
 				return c.Puntuacion == 1
 			},
 		},
