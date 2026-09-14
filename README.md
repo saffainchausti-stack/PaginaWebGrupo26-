@@ -5,6 +5,7 @@ Levantar el docker
 Hacer tests  
 Bajar el docker  
 
+Requisitos  
 Para compilar, ejecutar y probar este proyecto es necesario contar con:
 
 Go (versión 1.22 o superior): [https://go.dev/](https://go.dev/)  
