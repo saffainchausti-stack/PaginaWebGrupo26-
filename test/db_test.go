@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sqlc "ServidorTrabajoWeb/db/sqlc"
+
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -367,7 +368,19 @@ func TestComentarioCRUD(t *testing.T) {
 		t.Errorf("ListComentarioByReceta: se esperaba 1 comentario, se encontraron %d", len(listaComentarios))
 	}
 
-	// 4. Updates de Comentario
+	//4. CreateComentario Puntuacion invalida
+	_, err = queries.CreateComentario(ctx, sqlc.CreateComentarioParams{
+		IDUsuario:   usuario.IDUsuario,
+		IDReceta:    receta.IDReceta,
+		Descripcion: "Puntuación inválida",
+		Puntuacion:  6,
+	})
+
+	if err == nil {
+		t.Errorf("Se esperaba un error al crear un comentario con puntuación 6")
+	}
+
+	// 5. Updates de Comentario
 	subtests := []struct {
 		nombre   string
 		ejecutar func() error
@@ -414,7 +427,7 @@ func TestComentarioCRUD(t *testing.T) {
 		})
 	}
 
-	// 5. DeleteComentario
+	// 6. DeleteComentario
 	err = queries.DeleteComentario(ctx, comentario.IDComentario)
 	if err != nil {
 		t.Fatalf("Fallo DeleteComentario: %v", err)
