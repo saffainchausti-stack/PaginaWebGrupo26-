@@ -128,7 +128,7 @@ func TestUsuarioCRUD(t *testing.T) {
 				})
 			},
 			verificar: func(u sqlc.GetUsuarioRow) bool {
-				p, err := queries.GetContrasenia(ctx, usuario.IDUsuario)
+				p, err := queries.GetContrasenia(ctx, u.IDUsuario)
 				if err != nil {
 					return false
 				}
