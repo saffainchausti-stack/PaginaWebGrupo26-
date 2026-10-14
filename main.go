@@ -80,13 +80,13 @@ func usuarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		//getUsuario(w, r, id)
+		getUsuario(w, r, id)
 	case http.MethodPost:
 		postUsuario(w, r)
 	case http.MethodPut:
-		//updateUsuario(w, r, id)
+		updateUsuario(w, r, id)
 	case http.MethodDelete:
-		//deleteUsuario(w, r, id)
+		deleteUsuario(w, r, id)
 	default:
 		http.Error(w, "Method not allowed",
 			http.StatusMethodNotAllowed)
