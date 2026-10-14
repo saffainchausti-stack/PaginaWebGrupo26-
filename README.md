@@ -1,6 +1,6 @@
 # Para probar los tests ejecutar los siguientes comandos
 
-git clone -b tp2 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git  
+git clone -b tp3 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git  
 cd PaginaWebGrupo26-  
 make test  
 
