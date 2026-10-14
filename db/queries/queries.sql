@@ -19,6 +19,11 @@ INSERT INTO usuario (nombre, apellido, email, contrasenia)
 VALUES ($1, $2, $3, $4)
 RETURNING id_usuario, nombre, apellido, email;
 
+-- name: UpdateUsuario :one
+UPDATE usuario
+SET nombre = $2, apellido = $3, email = $4
+WHERE id_usuario = $1
+RETURNING id_usuario, nombre, apellido, email;
 
 -- name: UpdateUsuarioNombre :exec
 UPDATE usuario
@@ -70,6 +75,12 @@ VALUES ($1, $2, $3, $4, $5)
 RETURNING id_receta, nombre, descripcion, pasos, ingredientes, id_usuario;
 
 
+-- name: UpdateReceta :one
+UPDATE receta
+SET nombre = $2, descripcion = $3, pasos = $4, ingredientes = $5
+WHERE id_receta = $1
+RETURNING id_receta, nombre, descripcion, pasos, ingredientes, id_usuario;
+
 -- name: UpdateRecetaNombre :exec
 UPDATE receta
 SET nombre = $2
@@ -101,6 +112,11 @@ SELECT id_comentario, id_usuario, id_receta, descripcion, puntuacion
 FROM comentario
 WHERE id_comentario = $1;
 
+-- name: ListComentario :many
+SELECT id_comentario, id_usuario, id_receta, descripcion, puntuacion
+FROM comentario
+ORDER BY id_comentario;
+
 -- name: ListComentarioByReceta :many
 SELECT id_comentario, id_usuario, descripcion, puntuacion, id_receta
 FROM comentario
@@ -111,6 +127,12 @@ ORDER BY id_comentario;
 -- name: CreateComentario :one
 INSERT INTO comentario (id_usuario, id_receta, descripcion, puntuacion)
 VALUES ($1, $2, $3, $4)
+RETURNING id_comentario, id_usuario, id_receta, descripcion, puntuacion;
+
+-- name: UpdateComentario :one
+UPDATE comentario
+SET descripcion = $2, puntuacion = $3
+WHERE id_comentario = $1
 RETURNING id_comentario, id_usuario, id_receta, descripcion, puntuacion;
 
 -- name: UpdateComentarioDescripcion :exec
