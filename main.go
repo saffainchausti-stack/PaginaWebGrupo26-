@@ -73,14 +73,14 @@ func usuarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case http.MethodGet:
-		if len(parts) == 3 {
+		if len(parts) == 2 {
 			id, err = strconv.Atoi(parts[1])
 			if err != nil {
 				http.Error(w, "Invalid third parameter type", http.StatusBadRequest)
 				return
 			}
-		}else{
-			if len(parts) =! 2 {
+		} else {
+			if len(parts) != 1 {
 				http.Error(w, "Invalid URL", http.StatusBadRequest)
 				return
 			}
@@ -89,13 +89,12 @@ func usuarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed",
 			http.StatusMethodNotAllowed)
 	}
-	fmt.Print(id)
 
 	switch r.Method {
 	case http.MethodGet:
-		if len(parts) == 3 {
+		if len(parts) == 2 {
 			getUsuario(w, r, id)
-		}else{
+		} else {
 			listUsuario(w, r)
 		}
 	case http.MethodPost:
@@ -188,14 +187,14 @@ func recetaHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case http.MethodGet:
-		if len(parts) == 3 {
+		if len(parts) == 2 {
 			id, err = strconv.Atoi(parts[1])
 			if err != nil {
 				http.Error(w, "Invalid third parameter type", http.StatusBadRequest)
 				return
 			}
-		}else{
-			if len(parts) =! 2 {
+		} else {
+			if len(parts) != 1 {
 				http.Error(w, "Invalid URL", http.StatusBadRequest)
 				return
 			}
@@ -208,9 +207,9 @@ func recetaHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if len(parts) == 3 {
+		if len(parts) == 2 {
 			getReceta(w, r, id)
-		}else{
+		} else {
 			listReceta(w, r)
 		}
 	case http.MethodPost:
@@ -225,12 +224,11 @@ func recetaHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func postReceta(w http.ResponseWriter, r *http.Request) {
 	var u sqlc.CreateRecetaParams
 	json.NewDecoder(r.Body).Decode(&u)
 	uReturn, err := queries.CreateReceta(context.Background(), u)
-	
+
 	if err != nil {
 		log.Fatalf("Fallo al crear receta: %v", err)
 	}
@@ -240,7 +238,7 @@ func postReceta(w http.ResponseWriter, r *http.Request) {
 
 func listReceta(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	recetas, err := queries.listReceta(context.Background())
+	recetas, err := queries.ListReceta(context.Background())
 	if err != nil {
 		log.Fatalf("fallo al listar recetas: %v", err)
 	}
@@ -248,7 +246,7 @@ func listReceta(w http.ResponseWriter, r *http.Request) {
 }
 
 func getReceta(w http.ResponseWriter, _ *http.Request, id int) {
-	u, err := queries.getReceta(context.Background(), int32(id))
+	u, err := queries.GetReceta(context.Background(), int32(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -263,11 +261,11 @@ func updateReceta(w http.ResponseWriter, r *http.Request, id int) {
 	json.NewDecoder(r.Body).Decode(&decoReceta)
 	u := sqlc.UpdateRecetaParams{
 		IDReceta: int32(id),
-		Nombre:    decoReceta.Nombre,
-		Apellido:  decoReceta.Apellido,
-		Email:     decoReceta.Email,
+		Nombre:   decoReceta.Nombre,
+		Apellido: decoReceta.Apellido,
+		Email:    decoReceta.Email,
 	}
-	_, err := queries.updateReceta(context.Background(), u)
+	_, err := queries.UpdateReceta(context.Background(), u)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -276,7 +274,7 @@ func updateReceta(w http.ResponseWriter, r *http.Request, id int) {
 }
 
 func deleteReceta(w http.ResponseWriter, _ *http.Request, id int) {
-	err := queries.deleteReceta(context.Background(), int32(id))
+	err := queries.DeleteReceta(context.Background(), int32(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
