@@ -1,6 +1,7 @@
 package main
 
 import (
+	sqlc "ServidorTrabajoWeb/db/sqlc"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -11,9 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	sqlc "ServidorTrabajoWeb/db/sqlc"
-
-	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var queries *sqlc.Queries
@@ -34,6 +33,10 @@ func main() {
 	// Usamos http.Handle porque fileServer es un http.Handler.
 	http.Handle("/", fileServer)
 	http.HandleFunc("/usuario", usuarioHandlerCRUD)
+	http.HandleFunc("/usuario/", usuarioHandlerCRUD)
+
+	http.HandleFunc("/receta", recetaHandlerCRUD)
+	http.HandleFunc("/receta/", recetaHandlerCRUD)
 
 	// Define el puerto y muestra un mensaje
 	port := ":8080"
@@ -138,7 +141,7 @@ func getUsuario(w http.ResponseWriter, _ *http.Request, id int) {
 	u, err := queries.GetUsuario(context.Background(), int32(id))
 	if err != nil {
 		//si la base devuelve un error por no encontrar al usuario
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			log.Printf("Usuario con ID %d no encontrado", id)
 			http.Error(w, "Usuario no encontrado", http.StatusNotFound)
 			return
@@ -183,8 +186,10 @@ func deleteUsuario(w http.ResponseWriter, _ *http.Request, id int) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+/////////////////////CRUDs de tabla receta/////////////////////
+
 func recetaHandlerCRUD(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	var id int
 	var err error
 	switch r.Method {
@@ -277,10 +282,11 @@ func updateReceta(w http.ResponseWriter, r *http.Request, id int) {
 	var decoReceta sqlc.UpdateRecetaParams
 	json.NewDecoder(r.Body).Decode(&decoReceta)
 	u := sqlc.UpdateRecetaParams{
-		IDReceta: int32(id),
-		Nombre:   decoReceta.Nombre,
-		Apellido: decoReceta.Apellido,
-		Email:    decoReceta.Email,
+		IDReceta:     int32(id),
+		Nombre:       decoReceta.Nombre,
+		Descripcion:  decoReceta.Descripcion,
+		Pasos:        decoReceta.Pasos,
+		Ingredientes: decoReceta.Ingredientes,
 	}
 	_, err := queries.UpdateReceta(context.Background(), u)
 	if err != nil {
