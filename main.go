@@ -33,6 +33,7 @@ func main() {
 	// Registra el manejador para que atienda todas las peticiones ("/").
 	// Usamos http.Handle porque fileServer es un http.Handler.
 	http.Handle("/", fileServer)
+	http.HandleFunc("/usuario", usuarioHandlerCRUD)
 
 	// Define el puerto y muestra un mensaje
 	port := ":8080"
@@ -58,59 +59,52 @@ func main() {
 /////////////////////CRUDs de tabla usuario/////////////////////
 
 func usuarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	var id int
-	var err error
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+
 	switch r.Method {
 	case http.MethodPost:
 		if len(parts) != 1 {
-			http.Error(w, "Invalid URL", http.StatusBadRequest)
+			http.Error(w, "Ruta inválida", http.StatusBadRequest)
 			return
 		}
+		postUsuario(w, r)
+		return
+
+	case http.MethodGet:
+		if len(parts) == 1 {
+			listUsuario(w, r)
+			return
+		}
+
 	case http.MethodPut, http.MethodDelete:
 		if len(parts) != 2 {
-			http.Error(w, "Invalid URL", http.StatusBadRequest)
+			http.Error(w, "Ruta inválida", http.StatusBadRequest)
 			return
 		}
-		id, err = strconv.Atoi(parts[1])
-		if err != nil {
-			http.Error(w, "Invalid third parameter type", http.StatusBadRequest)
-			return
-		}
-	case http.MethodGet:
-		if len(parts) == 2 {
-			id, err = strconv.Atoi(parts[1])
-			if err != nil {
-				http.Error(w, "Invalid third parameter type", http.StatusBadRequest)
-				return
-			}
-		} else {
-			if len(parts) != 1 {
-				http.Error(w, "Invalid URL", http.StatusBadRequest)
-				return
-			}
-		}
+
 	default:
-		http.Error(w, "Method not allowed",
-			http.StatusMethodNotAllowed)
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if len(parts) != 2 {
+		http.Error(w, "Ruta inválida", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[1])
+	if err != nil || id <= 0 {
+		http.Error(w, "El ID debe ser un entero positivo", http.StatusBadRequest)
+		return
 	}
 
 	switch r.Method {
 	case http.MethodGet:
-		if len(parts) == 2 {
-			getUsuario(w, r, id)
-		} else {
-			listUsuario(w, r)
-		}
-	case http.MethodPost:
-		postUsuario(w, r)
+		getUsuario(w, r, id)
 	case http.MethodPut:
 		updateUsuario(w, r, id)
 	case http.MethodDelete:
 		deleteUsuario(w, r, id)
-	default:
-		http.Error(w, "Method not allowed",
-			http.StatusMethodNotAllowed)
 	}
 }
 
@@ -123,6 +117,8 @@ func postUsuario(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Fallo al crear usuario", http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(uReturn)
 }
@@ -153,9 +149,10 @@ func getUsuario(w http.ResponseWriter, _ *http.Request, id int) {
 			http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(u)
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(u)
 }
 
 func updateUsuario(w http.ResponseWriter, r *http.Request, id int) {
