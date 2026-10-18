@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 	"strings"
 
 	sqlc "ServidorTrabajoWeb/db/sqlc"
+
+	"github.com/jackc/pgx/v5"
 )
 
 var queries *sqlc.Queries
@@ -40,7 +43,7 @@ func main() {
 	connStr := "host=localhost port=5432 user=postgres password=postgres dbname=recetas sslmode=disable"
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Fatalf("failed to connect to DB: %v", err)
+		log.Fatalf("failed to connect to DB: %v\n", err)
 	}
 	defer db.Close()
 	queries = sqlc.New(db)
@@ -51,6 +54,8 @@ func main() {
 		log.Fatalf("Error al iniciar el servidor: %s\n", err)
 	}
 }
+
+/////////////////////CRUDs de tabla usuario/////////////////////
 
 func usuarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
@@ -114,7 +119,9 @@ func postUsuario(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&u)
 	uReturn, err := queries.CreateUsuario(context.Background(), u)
 	if err != nil {
-		log.Fatalf("Fallo al crear usuario: %v", err)
+		log.Printf("Fallo al crear usuario: %v\n", err)
+		http.Error(w, "Fallo al crear usuario", http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(uReturn)
@@ -124,7 +131,9 @@ func listUsuario(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	usuarios, err := queries.ListUsuario(context.Background())
 	if err != nil {
-		log.Fatalf("fallo al listar usuarios: %v", err)
+		log.Printf("Fallo al listar usuarios: %v\n", err)
+		http.Error(w, "Fallo al listar usuarios", http.StatusInternalServerError)
+		return
 	}
 	json.NewEncoder(w).Encode(usuarios)
 }
@@ -132,7 +141,16 @@ func listUsuario(w http.ResponseWriter, r *http.Request) {
 func getUsuario(w http.ResponseWriter, _ *http.Request, id int) {
 	u, err := queries.GetUsuario(context.Background(), int32(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		//si la base devuelve un error por no encontrar al usuario
+		if errors.Is(err, pgx.ErrNoRows) {
+			log.Printf("Usuario con ID %d no encontrado", id)
+			http.Error(w, "Usuario no encontrado", http.StatusNotFound)
+			return
+		}
+		//si la base devuelve un error por fallo interno en la consulta
+		log.Printf("Fallo al obtener usuario con ID %d: %v", id, err)
+		http.Error(w, "Error interno del servidor",
+			http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -151,7 +169,8 @@ func updateUsuario(w http.ResponseWriter, r *http.Request, id int) {
 	}
 	_, err := queries.UpdateUsuario(context.Background(), u)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("Fallo al actualizar usuario con ID %d: %v\n", u.IDUsuario, err)
+		http.Error(w, "Fallo al actualizar usuario", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -160,7 +179,8 @@ func updateUsuario(w http.ResponseWriter, r *http.Request, id int) {
 func deleteUsuario(w http.ResponseWriter, _ *http.Request, id int) {
 	err := queries.DeleteUsuario(context.Background(), int32(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		log.Printf("Fallo al eliminar usuario con ID %d: %v\n", id, err)
+		http.Error(w, "Fallo al eliminar usuario", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
