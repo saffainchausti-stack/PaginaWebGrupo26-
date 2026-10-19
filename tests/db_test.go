@@ -38,7 +38,7 @@ func TestUsuarioCRUD(t *testing.T) {
 	// 1. CreateUsuario
 	usuario, err := queries.CreateUsuario(ctx, sqlc.CreateUsuarioParams{
 		Nombre:      "Carlos",
-		Apellido:    sql.NullString{String: "Perez", Valid: true},
+		Apellido:    "Perez",
 		Email:       "carlos.perez@gmail.com",
 		Contrasenia: "contra123",
 	})
@@ -104,10 +104,10 @@ func TestUsuarioCRUD(t *testing.T) {
 			ejecutar: func() error {
 				return queries.UpdateUsuarioApellido(ctx, sqlc.UpdateUsuarioApellidoParams{
 					IDUsuario: usuario.IDUsuario,
-					Apellido:  sql.NullString{String: "Gomez", Valid: true},
+					Apellido:  "Gomez",
 				})
 			},
-			verificar: func(u sqlc.GetUsuarioRow) bool { return u.Apellido.String == "Gomez" },
+			verificar: func(u sqlc.GetUsuarioRow) bool { return u.Apellido == "Gomez" },
 		},
 		{
 			nombre: "UpdateUsuarioEmail",
@@ -174,7 +174,7 @@ func TestRecetaCRUD(t *testing.T) {
 	// Necesitamos un usuario para la Foreign Key
 	autor, err := queries.CreateUsuario(ctx, sqlc.CreateUsuarioParams{
 		Nombre:      "Chef",
-		Apellido:    sql.NullString{String: "Gusteau", Valid: true},
+		Apellido:    "Gusteau",
 		Email:       "gusteau@recetas.com",
 		Contrasenia: "cocinorico",
 	})
@@ -315,7 +315,7 @@ func TestComentarioCRUD(t *testing.T) {
 	// Crear autor y receta para las Foreign Keys
 	usuario, err := queries.CreateUsuario(ctx, sqlc.CreateUsuarioParams{
 		Nombre:      "Critico",
-		Apellido:    sql.NullString{String: "Ego", Valid: true},
+		Apellido:    "Ego",
 		Email:       "antonEgo@critica.com",
 		Contrasenia: "claveCritico1",
 	})

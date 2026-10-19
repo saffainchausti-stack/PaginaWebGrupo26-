@@ -216,10 +216,10 @@ func updateUsuario(w http.ResponseWriter, r *http.Request, id int) {
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "Usuario no encontrado", http.StatusBadRequest)
+			http.Error(w, "Usuario no encontrado", http.StatusNotFound)
 			return
 		}
-		http.Error(w, "Fallo al actualizar usuario", http.StatusBadRequest)
+		http.Error(w, "Fallo al actualizar usuario", http.StatusInternalServerError)
 		return
 	}
 
