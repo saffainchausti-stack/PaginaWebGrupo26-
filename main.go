@@ -203,7 +203,7 @@ func updateUsuario(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	if strings.TrimSpace(input.Nombre) == "" || strings.TrimSpace(input.Email) == "" || strings.TrimSpace(input.Apellido) == ""{
+	if strings.TrimSpace(input.Nombre) == "" || strings.TrimSpace(input.Email) == "" || strings.TrimSpace(input.Apellido) == "" {
 		http.Error(w, "Nombre y email no pueden estar vacíos", http.StatusBadRequest)
 		return
 	}
@@ -216,10 +216,10 @@ func updateUsuario(w http.ResponseWriter, r *http.Request, id int) {
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "Usuario no encontrado", http.StatusNotFound)
+			http.Error(w, "Usuario no encontrado", http.StatusBadRequest)
 			return
 		}
-		http.Error(w, "Fallo al actualizar usuario", http.StatusInternalServerError)
+		http.Error(w, "Fallo al actualizar usuario", http.StatusBadRequest)
 		return
 	}
 
