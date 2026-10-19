@@ -1,3 +1,4 @@
+#---------------------------------------------------------------------------------
 # Crear un usuario con parametros incorrectos
 POST http://localhost:8080/usuario
 Content-Type: application/json
@@ -116,6 +117,97 @@ Content-Type: application/json
 HTTP 200
 [Asserts]
 jsonpath "$.descripcion" == "buena ensalada"
+
+# Crear un comentario con parametros incorrectos (puntuación fuera de rango 1-5)
+POST http://localhost:8080/comentario
+Content-Type: application/json
+
+{
+  "id_usuario": {{idU}},
+  "id_receta": {{idR}},
+  "descripcion": "Comentario inválido",
+  "puntuacion": 10
+}
+HTTP 400
+
+#---------------------------------------------------------------------------------
+# Crear un comentario válido
+POST http://localhost:8080/comentario
+Content-Type: application/json
+
+{
+  "id_usuario": {{idU}},
+  "id_receta": {{idR}},
+  "descripcion": "Excelente receta, muy rica",
+  "puntuacion": 5
+}
+HTTP 201
+[Captures]
+idC: jsonpath "$.id_comentario"
+[Asserts]
+jsonpath "$.descripcion" == "Excelente receta, muy rica"
+jsonpath "$.puntuacion" == 5
+jsonpath "$.id_receta" == {{idR}}
+jsonpath "$.id_usuario" == {{idU}}
+
+
+# Listar todos los comentarios
+GET http://localhost:8080/comentario
+HTTP 200
+[Asserts]
+jsonpath "$" isCollection
+
+
+# Listar comentarios filtrados por receta (query param)
+GET http://localhost:8080/comentario?receta={{idR}}
+HTTP 200
+[Asserts]
+jsonpath "$" isCollection
+jsonpath "$[0].id_receta" == {{idR}}
+
+
+# Consultar el comentario creado por ID
+GET http://localhost:8080/comentario/{{idC}}
+HTTP 200
+[Asserts]
+jsonpath "$.id_comentario" == {{idC}}
+jsonpath "$.descripcion" == "Excelente receta, muy rica"
+
+
+# Modificar el comentario con datos inválidos (puntuación menor a 1)
+PUT http://localhost:8080/comentario/{{idC}}
+Content-Type: application/json
+
+{
+  "descripcion": "Intento de modificación fallida",
+  "puntuacion": 0
+}
+HTTP 400
+
+
+# Modificar el comentario exitosamente
+PUT http://localhost:8080/comentario/{{idC}}
+Content-Type: application/json
+
+{
+  "descripcion": "Excelente receta, ahora me gusta más",
+  "puntuacion": 4
+}
+HTTP 200
+[Asserts]
+jsonpath "$.descripcion" == "Excelente receta, ahora me gusta más"
+jsonpath "$.puntuacion" == 4
+
+
+#---------------------------------------------------------------------------------
+# Eliminar el comentario
+DELETE http://localhost:8080/comentario/{{idC}}
+HTTP 204
+
+
+# Verificar que el comentario ya no exista
+GET http://localhost:8080/comentario/{{idC}}
+HTTP 404
 
 
 # Eliminar el receta
