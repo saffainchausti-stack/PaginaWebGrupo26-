@@ -15,7 +15,6 @@ import (
 )
 
 var queries *sqlc.Queries
-var db *sql.DB
 
 func main() {
 	// Establece la conexion con la base de datos
@@ -23,6 +22,9 @@ func main() {
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
 		log.Fatalf("failed to connect to DB: %v\n", err)
+	}
+	if err := db.Ping(); err != nil { // Verifica que la BD responde
+		log.Fatalf("failed to ping DB: %v\n", err)
 	}
 	defer db.Close()
 	queries = sqlc.New(db)
