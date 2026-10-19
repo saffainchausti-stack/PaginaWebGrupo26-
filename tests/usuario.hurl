@@ -5,8 +5,9 @@ Content-Type: application/json
 
 {
   "nombre": "Usuario",
-  "apellido":  "Hurl",
-  "email": "hurl@gmail.com"
+  "apellido":  "{String:"Hurl", Valid: true}",
+  "email": "hurl1@gmail.com",
+  "contrasenia": "1234"
 }
 HTTP 201
 [Captures]
@@ -19,7 +20,7 @@ jsonpath "$.nombre" == "Usuario"
 GET http://localhost:8080/usuario
 HTTP 200
 [Asserts]
-jsonpath "$" isArray
+jsonpath "$" isCollection
 
 
 # Consultar el usuario creado
@@ -35,12 +36,13 @@ Content-Type: application/json
 
 {
   "nombre": "Usuario",
-  "apellido": "Hurl Modificado",
-  "email": "hurl@gmail.com"
+  "apellido": "{String:"Hurl Modificado", Valid: true}",
+  "email": "hurl1@gmail.com",
+  "contrasenia": "1234"
 }
 HTTP 200
 [Asserts]
-jsonpath "$.apellido" == "Hurl Modificado"
+jsonpath "$.apellido.String" == "Hurl Modificado"
 
 
 # Eliminar el usuario

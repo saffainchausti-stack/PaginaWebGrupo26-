@@ -146,7 +146,7 @@ func postUsuario(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.TrimSpace(input.Nombre) == "" || strings.TrimSpace(input.Email) == "" || strings.TrimSpace(input.Contrasenia) == "" {
-		http.Error(w, "Nombre, email y contraseña son obligatorios", http.StatusBadRequest)
+		http.Error(w, "Nombre, email y contraseña son obligatorios", http.StatusConflict)
 		return
 	}
 
@@ -158,7 +158,7 @@ func postUsuario(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Printf("Fallo al crear usuario: %v\n", err)
-		http.Error(w, "Fallo al crear usuario: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Fallo al crear usuario: "+err.Error(), http.StatusForbidden)
 		return
 	}
 
