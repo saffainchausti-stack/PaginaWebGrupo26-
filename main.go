@@ -61,7 +61,7 @@ func main() {
     http.HandleFunc("/receta", recetasHandler)          
     http.HandleFunc("/receta/", recetaHandler)      
 
-    http.HandleFunc("/comentario", comentariosHandler)      \
+    http.HandleFunc("/comentario", comentariosHandler)      
     http.HandleFunc("/comentario/", comentarioHandler)
 
 	// Define el puerto y muestra un mensaje
