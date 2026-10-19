@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS receta (
     ingredientes TEXT NOT NULL,
     id_usuario INTEGER NOT NULL,
     pasos TEXT NOT NULL,
-    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS comentario (
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS comentario (
     id_receta INTEGER NOT NULL,
     descripcion VARCHAR(255) NOT NULL,
     puntuacion SMALLINT NOT NULL CHECK (puntuacion BETWEEN 1 AND 5),
-    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
-    FOREIGN KEY (id_receta) REFERENCES receta(id_receta)
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_receta) REFERENCES receta(id_receta) ON DELETE CASCADE
 );
 
