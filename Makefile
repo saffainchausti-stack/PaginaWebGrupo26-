@@ -25,9 +25,9 @@ test: rmsqlc down generate build up
 	docker compose down -v; \
 	exit $$status
 
-main: rmsqlc down generate build
-	@docker compose up -d --wait database
-	@go run main.go; \
+test-api: rmsqlc down generate build
+	@docker compose up -d --build --wait; \
+	hurl --test requests.hurl; \
 	status=$$?; \
 	docker compose down -v; \
 	exit $$status
