@@ -4,15 +4,15 @@ POST http://localhost:8080/usuario
 Content-Type: application/json
 
 {
-  "Nombre": "Usuario",
-  "Apellido":  "Hurl",
-  "Email": "hurl@gmail.com"
+  "nombre": "Usuario",
+  "apellido":  "Hurl",
+  "email": "hurl@gmail.com"
 }
 HTTP 201
 [Captures]
-id: jsonpath "$.IDUsuario"
+id: jsonpath "$.id_usuario"
 [Asserts]
-jsonpath "$.Nombre" == "Usuario"
+jsonpath "$.nombre" == "Usuario"
 
 
 # Listar usuarios
@@ -26,7 +26,7 @@ jsonpath "$" isArray
 GET http://localhost:8080/usuario/{{id}}
 HTTP 200
 [Asserts]
-jsonpath "$.IDUsuario" == {{id}}
+jsonpath "$.id_usuario" == {{id}}
 
 
 # Modificar el usuario
@@ -34,13 +34,13 @@ PUT http://localhost:8080/usuario/{{id}}
 Content-Type: application/json
 
 {
-  "Nombre": "Usuario",
-  "Apellido": "Hurl Modificado",
-  "Email": "hurl@example.com"
+  "nombre": "Usuario",
+  "apellido": "Hurl Modificado",
+  "email": "hurl@gmail.com"
 }
 HTTP 200
 [Asserts]
-jsonpath "$.Apellido" == "Hurl Modificado"
+jsonpath "$.apellido" == "Hurl Modificado"
 
 
 # Eliminar el usuario

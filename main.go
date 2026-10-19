@@ -239,8 +239,6 @@ func deleteUsuario(w http.ResponseWriter, r *http.Request, id int) {
 
 func recetaHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	var id int
-	var err error
 
 	switch r.Method {
 	case http.MethodPost:
@@ -265,7 +263,7 @@ func recetaHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err = strconv.Atoi(parts[1])
+	id, err := strconv.Atoi(parts[1])
 	if err != nil || id <= 0 {
 		http.Error(w, "El ID debe ser un entero positivo", http.StatusBadRequest)
 		return
@@ -293,7 +291,7 @@ func postReceta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uReturn, err := queries.CreateReceta(r.Context(), sqlc.CreateRecetaParams{
+	rReturn, err := queries.CreateReceta(r.Context(), sqlc.CreateRecetaParams{
 		Nombre:       input.Nombre,
 		Descripcion:  input.Descripcion,
 		Pasos:        input.Pasos,
@@ -307,7 +305,7 @@ func postReceta(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(uReturn)
+	json.NewEncoder(w).Encode(rReturn)
 }
 
 func listReceta(w http.ResponseWriter, r *http.Request) {
