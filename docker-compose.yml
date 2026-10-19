@@ -1,19 +1,20 @@
 services:
   web:
-      build: .
-      ports:
-        - "8080:8080"
-      environment:
-        - DATABASE_URL=host=database port=5432 user=postgres password=postgres dbname=recetas sslmode=disable
-      depends_on:
-        database:
-          condition: service_healthy
-      healthcheck:
-        test: ["CMD", "wget", "-qO-", "http://localhost:8080/"]
-        interval: 2s
-        timeout: 5s
-        retries: 10
-        start_period: 3s
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=host=database port=5432 user=postgres password=postgres dbname=recetas sslmode=disable
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 1"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+      start_period: 3s
+
   database:
     image: postgres:16-alpine
     container_name: postgres-recetas
