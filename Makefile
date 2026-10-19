@@ -25,6 +25,9 @@ test: rmsqlc down generate build up
 	docker compose down -v; \
 	exit $$status
 
-main: rmsqlc down generate build up 
-	@go run main.go \
-	docker compose down -v;
+main: rmsqlc down generate build
+	@docker compose up -d --wait database
+	@go run main.go; \
+	status=$$?; \
+	docker compose down -v; \
+	exit $$status
