@@ -10,21 +10,35 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var queries *sqlc.Queries
 
-func main() {
-	// Establece la conexion con la base de datos
-	connStr := "host=localhost port=5432 user=postgres password=postgres dbname=recetas sslmode=disable"
+func abrirDB() (*sql.DB, error) {
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		// Valor por defecto para correr la API fuera de Docker
+		connStr = "host=localhost port=5432 user=postgres password=postgres dbname=recetas sslmode=disable"
+	}
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Fatalf("failed to connect to DB: %v\n", err)
+		return nil, err
 	}
-	if err := db.Ping(); err != nil { // Verifica que la BD responde
-		log.Fatalf("failed to ping DB: %v\n", err)
+	if err := db.Ping(); err != nil { 
+		db.Close()
+		return nil, err
+	}
+	db.SetMaxOpenConns(25) 
+	return db, nil
+}
+
+func main() {
+	db, err := abrirDB()
+	if err != nil {
+		log.Fatalf("failed to connect to DB: %v\n", err)
 	}
 	defer db.Close()
 	queries = sqlc.New(db)
@@ -41,14 +55,14 @@ func main() {
 	// Usamos http.Handle porque fileServer es un http.Handler.
 	http.Handle("/", fileServer)
 
-	http.HandleFunc("/usuario", usuarioHandlerCRUD)
-	http.HandleFunc("/usuario/", usuarioHandlerCRUD)
+	http.HandleFunc("/usuario", usuariosHandler)
+	http.HandleFunc("/usuario/", usuarioHandler)    
+	
+    http.HandleFunc("/receta", recetasHandler)          
+    http.HandleFunc("/receta/", recetaHandler)      
 
-	http.HandleFunc("/receta", recetaHandlerCRUD)
-	http.HandleFunc("/receta/", recetaHandlerCRUD)
-
-	http.HandleFunc("/comentario", comentarioHandlerCRUD)
-	http.HandleFunc("/comentario/", comentarioHandlerCRUD)
+    http.HandleFunc("/comentario", comentariosHandler)      \
+    http.HandleFunc("/comentario/", comentarioHandler)
 
 	// Define el puerto y muestra un mensaje
 	port := ":8080"
@@ -88,41 +102,19 @@ type ComentarioInput struct {
 
 /////////////////////CRUDs de tabla usuario/////////////////////
 
-func usuarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-
+func usuariosHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodPost:
-		if len(parts) != 1 {
-			http.Error(w, "Ruta inválida", http.StatusBadRequest)
-			return
-		}
-		postUsuario(w, r)
-		return
-
 	case http.MethodGet:
-		if len(parts) == 1 {
-			listUsuario(w, r)
-			return
-		}
-
-	case http.MethodPut, http.MethodDelete:
-		if len(parts) != 2 {
-			http.Error(w, "Ruta inválida", http.StatusBadRequest)
-			return
-		}
-
+		listUsuario(w, r)
+	case http.MethodPost:
+		postUsuario(w, r)
 	default:
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
-		return
 	}
+}
 
-	if len(parts) != 2 {
-		http.Error(w, "Ruta inválida", http.StatusBadRequest)
-		return
-	}
-
-	id, err := strconv.Atoi(parts[1])
+func usuarioHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/usuario/"))
 	if err != nil || id <= 0 {
 		http.Error(w, "El ID debe ser un entero positivo", http.StatusBadRequest)
 		return
@@ -135,6 +127,8 @@ func usuarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 		updateUsuario(w, r, id)
 	case http.MethodDelete:
 		deleteUsuario(w, r, id)
+	default:
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -239,33 +233,19 @@ func deleteUsuario(w http.ResponseWriter, r *http.Request, id int) {
 
 /////////////////////CRUDs de tabla receta/////////////////////
 
-func recetaHandlerCRUD(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-
+func recetasHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodPost:
-		if len(parts) != 1 {
-			http.Error(w, "Ruta inválida", http.StatusBadRequest)
-			return
-		}
-		postReceta(w, r)
-		return
 	case http.MethodGet:
-		if len(parts) == 1 {
-			listReceta(w, r)
-			return
-		}
-	case http.MethodPut, http.MethodDelete:
-		if len(parts) != 2 {
-			http.Error(w, "Ruta inválida", http.StatusBadRequest)
-			return
-		}
+		listReceta(w, r)
+	case http.MethodPost:
+		postReceta(w, r)
 	default:
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
-		return
 	}
+}
 
-	id, err := strconv.Atoi(parts[1])
+func recetaHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/receta/"))
 	if err != nil || id <= 0 {
 		http.Error(w, "El ID debe ser un entero positivo", http.StatusBadRequest)
 		return
@@ -278,6 +258,8 @@ func recetaHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 		updateReceta(w, r, id)
 	case http.MethodDelete:
 		deleteReceta(w, r, id)
+	default:
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -383,35 +365,19 @@ func deleteReceta(w http.ResponseWriter, r *http.Request, id int) {
 
 ///////////////////// CRUDs de tabla comentario /////////////////////
 
-func comentarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	var id int
-	var err error
-
+func comentariosHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodPost:
-		if len(parts) != 1 {
-			http.Error(w, "Ruta inválida", http.StatusBadRequest)
-			return
-		}
-		postComentario(w, r)
-		return
 	case http.MethodGet:
-		if len(parts) == 1 {
-			listComentario(w, r)
-			return
-		}
-	case http.MethodPut, http.MethodDelete:
-		if len(parts) != 2 {
-			http.Error(w, "Ruta inválida", http.StatusBadRequest)
-			return
-		}
+		listComentario(w, r)
+	case http.MethodPost:
+		postComentario(w, r)
 	default:
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
-		return
 	}
+}
 
-	id, err = strconv.Atoi(parts[1])
+func comentarioHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/comentario/"))
 	if err != nil || id <= 0 {
 		http.Error(w, "El ID debe ser un entero positivo", http.StatusBadRequest)
 		return
@@ -424,6 +390,8 @@ func comentarioHandlerCRUD(w http.ResponseWriter, r *http.Request) {
 		updateComentario(w, r, id)
 	case http.MethodDelete:
 		deleteComentario(w, r, id)
+	default:
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 	}
 }
 
