@@ -169,3 +169,87 @@ Para ejecutar los tests de persistencia se requiere contar con:
 - sqlc.
 
 El código generado por sqlc no necesita estar previamente generado para ejecutar el proceso de testing, ya que el `Makefile` lo genera automáticamente.
+
+## 2. Capa de Aplicación y API REST
+
+### Especificación de Endpoints
+
+#### 1. Entidad: Usuario (`/usuario`)
+
+| Método | Ruta | Descripción | Payload Request | Respuesta Exitosa | Respuestas de Error |
+|---|---|---|---|---|---|
+| **POST** | `/usuario` | Crea un nuevo usuario | `{"nombre", "apellido", "email", "contrasenia"}` | `201 Created` (datos del usuario sin password) | `400 Bad Request` |
+| **GET** | `/usuario` | Lista todos los usuarios | Ninguno | `200 OK` (array JSON) | `500 Internal Server Error` |
+| **GET** | `/usuario/{id}` | Obtiene el detalle de un usuario | Ninguno | `200 OK` (objeto usuario) | `400 Bad Request`, `404 Not Found` |
+| **PUT** | `/usuario/{id}` | Actualiza nombre, apellido o email | `{"nombre", "apellido", "email"}` | `200 OK` (objeto actualizado) | `400 Bad Request`, `404 Not Found` |
+| **DELETE** | `/usuario/{id}` | Elimina un usuario por ID | Ninguno | `204 No Content` | `400 Bad Request`, `500 Internal Server Error` |
+
+#### 2. Entidad: Receta (`/receta`)
+
+| Método | Ruta | Descripción | Payload Request | Respuesta Exitosa | Respuestas de Error |
+|---|---|---|---|---|---|
+| **POST** | `/receta` | Crea una nueva receta | `{"nombre", "descripcion", "ingredientes", "pasos", "id_usuario"}` | `201 Created` (objeto receta) | `400 Bad Request` |
+| **GET** | `/receta` | Lista todas las recetas registradas | Ninguno | `200 OK` (array JSON) | `500 Internal Server Error` |
+| **GET** | `/receta?usuario={id}` | Filtra recetas creadas por un usuario específico | Query param `usuario` | `200 OK` (array JSON) | `500 Internal Server Error` |
+| **GET** | `/receta/{id}` | Obtiene el detalle completo de una receta | Ninguno | `200 OK` (objeto receta) | `400 Bad Request`, `404 Not Found` |
+| **PUT** | `/receta/{id}` | Modifica el contenido de una receta | `{"nombre", "descripcion", "ingredientes", "pasos"}` | `200 OK` (objeto actualizado) | `400 Bad Request`, `404 Not Found` |
+| **DELETE** | `/receta/{id}` | Elimina una receta por ID | Ninguno | `204 No Content` | `400 Bad Request`, `500 Internal Server Error` |
+
+#### 3. Entidad: Comentario (`/comentario`)
+
+| Método | Ruta | Descripción | Payload Request | Respuesta Exitosa | Respuestas de Error |
+|---|---|---|---|---|---|
+| **POST** | `/comentario` | Agrega un comentario y puntuación a una receta | `{"id_usuario", "id_receta", "descripcion", "puntuacion"}` | `201 Created` (objeto comentario) | `400 Bad Request` |
+| **GET** | `/comentario` | Lista todos los comentarios de la plataforma | Ninguno | `200 OK` (array JSON) | `500 Internal Server Error` |
+| **GET** | `/comentario?receta={id}` | Lista comentarios pertenecientes a una receta | Query param `receta` | `200 OK` (array JSON) | `500 Internal Server Error` |
+| **GET** | `/comentario/{id}` | Obtiene un comentario por su ID | Ninguno | `200 OK` (objeto comentario) | `400 Bad Request`, `404 Not Found` |
+| **PUT** | `/comentario/{id}` | Modifica la descripción y/o puntuación | `{"descripcion", "puntuacion"}` | `200 OK` (objeto actualizado) | `400 Bad Request`, `404 Not Found` |
+| **DELETE** | `/comentario/{id}` | Elimina un comentario por ID | Ninguno | `204 No Content` | `400 Bad Request`, `500 Internal Server Error` |
+
+### Validaciones y Manejo de Errores
+
+La API valida exhaustivamente las entradas antes de interactuar con la base de datos:
+1. **Campos Requeridos y Espacios en Blanco:** Se sanitizan cadenas mediante `strings.TrimSpace`. Campos esenciales como nombre, email, contraseña, títulos de recetas o descripciones no pueden enviarse vacíos.
+2. **Restricción de Puntuación:** La puntuación en comentarios está validada tanto en código Go como por restricción `CHECK` en PostgreSQL para aceptar exclusivamente valores enteros entre **1 y 5**.
+3. **Validación de Identificadores:** Cualquier ID pasado en la URL (`/{id}`) debe ser un entero positivo mayor a cero; de lo contrario, se responde de inmediato con `400 Bad Request`.
+4. **Respuestas de Colecciones Vacías:** Para evitar que un listado vacío devuelva `null`, la API garantiza el retorno de corchetes vacíos `[]` con código `200 OK`.
+5. **Códigos de Estado Estándar:**
+   - `200 OK`: Operación de consulta o modificación exitosa.
+   - `201 Created`: Recurso creado satisfactoriamente.
+   - `204 No Content`: Eliminación exitosa sin cuerpo de retorno.
+   - `400 Bad Request`: JSON malformado, parámetros faltantes o valores fuera de rango.
+   - `404 Not Found`: Recurso solicitado no encontrado en la base de datos.
+   - `405 Method Not Allowed`: Verbo HTTP no soportado en la ruta.
+   - `500 Internal Server Error`: Falla interna no controlada.
+
+### Pruebas de la API (`requests.hurl`)
+Utilizando la herramienta **Hurl**, se ejecutan 23 casos de prueba:
+1. Rechazo de creación de usuario por parámetros inválidos (`400`).
+2. Creación exitosa de usuario (`201`) y captura de `id_usuario`.
+3. Listado de usuarios (`200`) y verificación de tipo colección.
+4. Consulta del usuario recién creado (`200`).
+5. Actualización de datos del usuario (`200`).
+6. Rechazo de creación de receta con datos faltantes (`400`).
+7. Creación exitosa de receta asociada al usuario capturado (`201`) y captura de `id_receta`.
+8. Listado de recetas (`200`) y detalle de receta (`200`).
+9. Modificación de receta (`200`).
+10. Rechazo de comentario con puntuación inválida (> 5) (`400`).
+11. Creación exitosa de comentario (`201`) con captura de `id_comentario`.
+12. Listado general de comentarios y listado filtrado por receta (`?receta=...`) (`200`).
+13. Consulta de comentario por ID (`200`).
+14. Rechazo de modificación de comentario con puntuación menor a 1 (`400`).
+15. Modificación válida de comentario (`200`).
+16. Eliminación de comentario (`204`) y verificación de inexistencia (`404`).
+17. Eliminación de receta (`204`) y verificación de inexistencia (`404`).
+18. Eliminación de usuario (`204`) y verificación de inexistencia (`404`).
+
+## Automatización mediante Makefile
+
+| Comando | Descripción |
+|---|---|
+| `make test-api` | Elimina código generado anterior, detiene y elimina contenedores y volúmenes, regenera código con `sqlc`, compila el proyecto, levanta la base y la API en Docker esperando que ambos estén listos (`--wait`), ejecuta las pruebas con `hurl --test requests.hurl`, y borra contenedores y volúmenes al finalizar. |
+| `make test` | Ejecuta las pruebas unitarias de persistencia en Go (`tests/db_test.go`) contra el contenedor de base de datos. |
+| `make up` | Levanta los contenedores. |
+| `make down` | Detiene y borra los contenedores y volúmenes creados. |
+| `make generate` | Ejecuta `sqlc generate`. |
+| `make build` | Compila el código fuente de Go. |
