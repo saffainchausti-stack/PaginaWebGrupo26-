@@ -1,15 +1,19 @@
-# Para probar los tests ejecutar los siguientes comandos
+# Trabajo Práctico 3: API REST
 
-git clone -b tp3 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git  
-cd PaginaWebGrupo26-  
-make test  
+## Ejecución y Pruebas de hurl
 
-# Requisitos  
-Para compilar, ejecutar y probar este proyecto es necesario contar con:
+Para clonar y probar el proyecto en el branch `tp3`:
+git clone -b tp3 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git
+cd PaginaWebGrupo26-
+make test-api
 
-Go (versión 1.25.0)  
-Docker y Docker Compose  
-sqlc (Se puede instalar con: go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest)  
+## En caso de querer probar los test sobre persistencia
 
-# Documentación
-Para ver el diseño de la base de datos y persistencia, ir a [DOCUMENTACION.md](DOCUMENTACION.md).
+make test
+
+## Requisitos
+
+Go (versión 1.25)
+Docker y Docker Compose
+sqlc (go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest)
+Hurl (https://hurl.dev/docs/installation.html)
