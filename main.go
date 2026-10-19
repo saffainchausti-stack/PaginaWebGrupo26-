@@ -145,14 +145,14 @@ func postUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.TrimSpace(input.Nombre) == "" || strings.TrimSpace(input.Email) == "" || strings.TrimSpace(input.Contrasenia) == "" {
-		http.Error(w, "Nombre, email y contraseña son obligatorios", http.StatusConflict)
+	if strings.TrimSpace(input.Nombre) == "" || strings.TrimSpace(input.Email) == "" || strings.TrimSpace(input.Contrasenia) == "" || strings.TrimSpace(input.Apellido) == "" {
+		http.Error(w, "Nombre, Apellido, email y contraseña son obligatorios", http.StatusConflict)
 		return
 	}
 
 	uReturn, err := queries.CreateUsuario(r.Context(), sqlc.CreateUsuarioParams{
 		Nombre:      input.Nombre,
-		Apellido:    sql.NullString{String: input.Apellido, Valid: input.Apellido != ""},
+		Apellido:    input.Apellido,
 		Email:       input.Email,
 		Contrasenia: input.Contrasenia,
 	})
@@ -203,7 +203,7 @@ func updateUsuario(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	if strings.TrimSpace(input.Nombre) == "" || strings.TrimSpace(input.Email) == "" {
+	if strings.TrimSpace(input.Nombre) == "" || strings.TrimSpace(input.Email) == "" || strings.TrimSpace(input.Apellido) == ""{
 		http.Error(w, "Nombre y email no pueden estar vacíos", http.StatusBadRequest)
 		return
 	}
@@ -211,7 +211,7 @@ func updateUsuario(w http.ResponseWriter, r *http.Request, id int) {
 	actualizado, err := queries.UpdateUsuario(r.Context(), sqlc.UpdateUsuarioParams{
 		IDUsuario: int32(id),
 		Nombre:    input.Nombre,
-		Apellido:  sql.NullString{String: input.Apellido, Valid: input.Apellido != ""},
+		Apellido:  input.Apellido,
 		Email:     input.Email,
 	})
 	if err != nil {
