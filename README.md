@@ -1,8 +1,8 @@
 # Trabajo Práctico 3: API REST
 
-## Ejecución y Pruebas de hurl
+## Ejecución y Pruebas de hurl  
 
-Para clonar y probar el proyecto en el branch `tp3`:
+Para clonar y probar el proyecto en el branch `tp3`:  
 git clone -b tp3 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git  
 cd PaginaWebGrupo26-  
 make test-api  
