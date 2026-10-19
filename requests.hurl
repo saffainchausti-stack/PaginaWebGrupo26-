@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 HTTP 201
 [Captures]
-id: jsonpath "$.id_usuario"
+idU: jsonpath "$.id_usuario"
 [Asserts]
 jsonpath "$.nombre" == "Usuario"
 
@@ -36,14 +36,14 @@ jsonpath "$" isCollection
 
 
 # Consultar el usuario creado
-GET http://localhost:8080/usuario/{{id}}
+GET http://localhost:8080/usuario/{{idU}}
 HTTP 200
 [Asserts]
-jsonpath "$.id_usuario" == {{id}}
+jsonpath "$.id_usuario" == {{idU}}
 
 
 # Modificar el usuario
-PUT http://localhost:8080/usuario/{{id}}
+PUT http://localhost:8080/usuario/{{idU}}
 Content-Type: application/json
 
 {
@@ -57,29 +57,21 @@ HTTP 200
 jsonpath "$.apellido" == "Hurl Modificado"
 
 
-# Eliminar el usuario
-DELETE http://localhost:8080/usuario/{{id}}
-HTTP 204
-
 #---------------------------------------------------------------------------------
-# Verificar que ya no exista
-GET http://localhost:8080/receta/{{id}}
-HTTP 404
-
-# Crear un receta con parametros incorrectos
+# Crear una receta con parametros incorrectos
 POST http://localhost:8080/receta
 Content-Type: application/json
 
 {
   "nombre": "ensalada",
-  "descripcion":  "buena ensalada",
+  "descripcion":  "",
   "ingredientes": "lechuga",
   "pasos": "cortar lechuga"
 }
 HTTP 400
 
 
-# Crear un receta
+# Crear una receta
 POST http://localhost:8080/receta
 Content-Type: application/json
 
@@ -87,11 +79,12 @@ Content-Type: application/json
   "nombre": "ensalada",
   "descripcion":  "buena ensalada",
   "ingredientes": "lechuga",
-  "pasos": "cortar lechuga"
+  "pasos": "cortar lechuga",
+  "id_usuario": {{idU}}
 }
 HTTP 201
 [Captures]
-id: jsonpath "$.id_receta"
+idR: jsonpath "$.id_receta"
 [Asserts]
 jsonpath "$.nombre" == "ensalada"
 
@@ -103,15 +96,15 @@ HTTP 200
 jsonpath "$" isCollection
 
 
-# Consultar el usuario creado
-GET http://localhost:8080/receta/{{id}}
+# Consultar la receta creada
+GET http://localhost:8080/receta/{{idR}}
 HTTP 200
 [Asserts]
-jsonpath "$.id_receta" == {{id}}
+jsonpath "$.id_receta" == {{idR}}
 
 
-# Modificar el usuario
-PUT http://localhost:8080/receta/{{id}}
+# Modificar la receta
+PUT http://localhost:8080/receta/{{idR}}
 Content-Type: application/json
 
 {
@@ -125,12 +118,21 @@ HTTP 200
 jsonpath "$.descripcion" == "buena ensalada"
 
 
-# Eliminar el usuario
-DELETE http://localhost:8080/lechuga/{{id}}
+# Eliminar el receta
+DELETE http://localhost:8080/receta/{{idR}}
 HTTP 204
 
 
 # Verificar que ya no exista
-GET http://localhost:8080/lechuga/{{id}}
+GET http://localhost:8080/receta/{{idR}}
 HTTP 404
 
+
+# Eliminar el usuario
+DELETE http://localhost:8080/usuario/{{idU}}
+HTTP 204
+
+
+# Verificar que ya no exista
+GET http://localhost:8080/usuario/{{idU}}
+HTTP 404

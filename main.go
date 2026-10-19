@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
-	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -27,11 +27,11 @@ func abrirDB() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := db.Ping(); err != nil { 
+	if err := db.Ping(); err != nil {
 		db.Close()
 		return nil, err
 	}
-	db.SetMaxOpenConns(25) 
+	db.SetMaxOpenConns(25)
 	return db, nil
 }
 
@@ -56,13 +56,13 @@ func main() {
 	http.Handle("/", fileServer)
 
 	http.HandleFunc("/usuario", usuariosHandler)
-	http.HandleFunc("/usuario/", usuarioHandler)    
-	
-    http.HandleFunc("/receta", recetasHandler)          
-    http.HandleFunc("/receta/", recetaHandler)      
+	http.HandleFunc("/usuario/", usuarioHandler)
 
-    http.HandleFunc("/comentario", comentariosHandler)      
-    http.HandleFunc("/comentario/", comentarioHandler)
+	http.HandleFunc("/receta", recetasHandler)
+	http.HandleFunc("/receta/", recetaHandler)
+
+	http.HandleFunc("/comentario", comentariosHandler)
+	http.HandleFunc("/comentario/", comentarioHandler)
 
 	// Define el puerto y muestra un mensaje
 	port := ":8080"
@@ -283,6 +283,7 @@ func postReceta(w http.ResponseWriter, r *http.Request) {
 		IDUsuario:    input.IDUsuario,
 	})
 	if err != nil {
+		log.Printf("Fallo al crear receta: %v\n", err)
 		http.Error(w, "Fallo al crear receta: "+err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -345,7 +346,7 @@ func updateReceta(w http.ResponseWriter, r *http.Request, id int) {
 			http.Error(w, "Receta no encontrada", http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
