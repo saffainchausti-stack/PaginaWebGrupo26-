@@ -5,7 +5,7 @@ Content-Type: application/json
 
 {
   "nombre": "Usuario",
-  "apellido":  "{String:"Hurl", Valid: true}",
+  "apellido":  "Hurl",
   "email": "hurl1@gmail.com",
   "contrasenia": "1234"
 }
@@ -36,13 +36,13 @@ Content-Type: application/json
 
 {
   "nombre": "Usuario",
-  "apellido": "{String:"Hurl Modificado", Valid: true}",
+  "apellido": "Hurl Modificado",
   "email": "hurl1@gmail.com",
   "contrasenia": "1234"
 }
 HTTP 200
 [Asserts]
-jsonpath "$.apellido.String" == "Hurl Modificado"
+jsonpath "$.apellido" == "Hurl Modificado"
 
 
 # Eliminar el usuario
