@@ -358,7 +358,7 @@ func updateReceta(w http.ResponseWriter, r *http.Request, id int) {
 func deleteReceta(w http.ResponseWriter, r *http.Request, id int) {
 	err := queries.DeleteReceta(r.Context(), int32(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -479,35 +479,32 @@ func getComentario(w http.ResponseWriter, r *http.Request, id int) {
 }
 
 func updateComentario(w http.ResponseWriter, r *http.Request, id int) {
-	var decoComentario sqlc.UpdateComentarioParams
-	if err := json.NewDecoder(r.Body).Decode(&decoComentario); err != nil {
+	var input ComentarioInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "JSON inválido: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Validación
-	if strings.TrimSpace(decoComentario.Descripcion) == "" {
+	if strings.TrimSpace(input.Descripcion) == "" {
 		http.Error(w, "La descripción no puede estar vacía", http.StatusBadRequest)
 		return
 	}
-	if decoComentario.Puntuacion < 1 || decoComentario.Puntuacion > 5 {
+	if input.Puntuacion < 1 || input.Puntuacion > 5 {
 		http.Error(w, "La puntuación debe estar entre 1 y 5", http.StatusBadRequest)
 		return
 	}
 
-	u := sqlc.UpdateComentarioParams{
+	actualizado, err := queries.UpdateComentario(r.Context(), sqlc.UpdateComentarioParams{
 		IDComentario: int32(id),
-		Descripcion:  decoComentario.Descripcion,
-		Puntuacion:   decoComentario.Puntuacion,
-	}
-
-	actualizado, err := queries.UpdateComentario(r.Context(), u)
+		Descripcion:  input.Descripcion,
+		Puntuacion:   input.Puntuacion,
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "Comentario no encontrado", http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Fallo al actualizar comentario: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
