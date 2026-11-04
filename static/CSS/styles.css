@@ -1,18 +1,63 @@
 body {
-    background-color: rgb(47, 45, 45);
+    background-color: rgb(35, 35, 35);
+    
     }
-h1 {
+h1, h2 {
     font-family: "Rum Raisin", sans-serif;
     font-weight: 400;
     font-style: normal;
     text-align: center;
     color: white;
 }
-pre {
+pre, p {
     font-family: "Roboto", Arial;
     color: white;
     display: inline-block;
     font-size: 40px;
     text-wrap-mode: wrap;
     margin: 20px;
+}
+
+input, button{
+    
+    background-color: rgb(21, 21, 21);
+    color: white;
+}
+
+#div-receta {
+    color: white;
+}
+
+#recetas-container {
+    color: white;
+    font-family: "Roboto", Arial;
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+#recetas-container ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#recetas-container li {
+    background-color: rgb(25, 25, 25);
+    border: 1px solid #444;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    color: white;
+    font-family: "Roboto", Arial;
+    line-height: 1.5;
+}
+
+/* Estilo específico para el botón de "Eliminar" que genera JS */
+#recetas-container button {
+    background-color: rgb(100, 30, 30); /* Un tono rojizo para diferenciarlo */
+    margin-top: 10px;
+    border: none;
+}
+
+#recetas-container button:hover {
+    background-color: rgb(130, 40, 40);
 }

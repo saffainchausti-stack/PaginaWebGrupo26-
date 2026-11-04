@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SubmitRecipe</title>
-    
+    <title>Indice tp4</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -13,37 +13,24 @@
     <link rel="stylesheet" href="CSS/styles.css">
 </head>
 <body>
-    <h1>
-        Submit Recipe
-    </h1>
-    <pre>
-El proyecto consiste en el desarrollo de una aplicacion web para compartir recetas de cocina, donde los usuarios podrán registrarse, iniciar sesión, explorar recetas publicadas por otros usuarios y compartir sus propias preparaciones.  
+    <h1>Pagina de recetasssss!!!</h1>
+    <div id="div-receta">
+        Ingresar receta:
+        <form action="/receta" method="POST">
+        Nombre:
+        <input type="text" name="nombre" required /><br />
+        Descripción:
+        <input type="text" name="descripcion" required /><br />
+        Ingredientes:
+        <input type="text" name="ingredientes" required /><br />
+        Pasos:
+        <input type="text" name="pasos" required /><br />
 
-Cada usuario contará con una cuenta protegida mediante nombre de usuario y contraseña. Una vez autenticado, podrá acceder a las diferentes funcionalidades de la plataforma.
+        <button type="reset">Limpiar</button>
+        <button type="submit">Enviar</button>
+        </form>
+    </div>
 
-Las recetas publicadas incluirán la siguiente información:
-
-+ Título de la receta.
-+ Descripción breve del plato.
-+ Lista de ingredientes necesarios.
-+ Pasos o instrucciones para realizar la preparación.
-+ Imagen del resultado final.
-+ Usuario que publicó la receta.
-+ Fecha de publicación.
-+ Comentarios realizados por otros usuarios, cuando existan.
-
-La aplicación permitirá a los usuarios:
-
-&#8226 Registrarse creando una cuenta.
-&#8226 Iniciar y cerrar sesión.
-&#8226 Visualizar todas las recetas disponibles.
-&#8226 Consultar el detalle de una receta, incluyendo ingredientes, pasos, imagen y autor.
-&#8226 Publicar nuevas recetas.
-&#8226 Editar o eliminar sus propias recetas.
-&#8226 Agregar comentarios a recetas de otros usuarios.
-&#8226 Visualizar los comentarios realizados en cada receta.
-&#8226 Buscar recetas por nombre o por algún criterio básico.
-&#8226 Acceder a un perfil o sección personal donde puedan visualizarse las recetas publicadas por cada usuario.
-    </pre>
+    <script src="JS/app.js"></script>
 </body>
 </html>
