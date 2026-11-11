@@ -1,0 +1,17 @@
+package views
+
+import (
+    "ServidorTrabajoWeb/db/sqlc"
+)
+
+templ Index(recetas []db.ListRecetaRow) {
+	@Layout("Página de Recetas") {
+		<hgroup>
+			<h1>Pagina de recetasssss!!!</h1>
+			<p>Gestión de recetas con Server-Side Rendering en Go</p>
+		</hgroup>
+		
+		@RecetaForm(2)
+		@RecetaList(recetas)
+	}
+}

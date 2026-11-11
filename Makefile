@@ -5,7 +5,7 @@
 .PHONY: up down generate build exetest test rmsqlc
 
 up:
-	@docker compose up -d --wait
+	@docker compose up -d --wait --build 
 
 down:
 	@docker compose down -v

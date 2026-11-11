@@ -1,0 +1,38 @@
+package views
+
+import "fmt"
+
+templ RecetaForm(idUsuario int32) {
+	<article id="div-receta">
+		<header>
+			<h2>Ingresar receta</h2>
+		</header>
+		<!-- Apunta a /receta/{idUsuario} -->
+		<form action={ templ.SafeURL(fmt.Sprintf("/receta/%d", idUsuario)) } method="POST">
+			<label for="nombre">
+				Nombre:
+				<input type="text" id="nombre" name="nombre" placeholder="Ej: Pizza Casera" required/>
+			</label>
+
+			<label for="descripcion">
+				Descripción:
+				<input type="text" id="descripcion" name="descripcion" placeholder="Breve descripción de la receta" required/>
+			</label>
+
+			<label for="ingredientes">
+				Ingredientes:
+				<input type="text" id="ingredientes" name="ingredientes" placeholder="Harina, levadura, agua, queso..." required/>
+			</label>
+
+			<label for="pasos">
+				Pasos:
+				<input type="text" id="pasos" name="pasos" placeholder="1. Amasar, 2. Leudar, 3. Hornear..." required/>
+			</label>
+
+			<div class="grid">
+				<button type="reset" class="secondary">Limpiar</button>
+				<button type="submit">Enviar</button>
+			</div>
+		</form>
+	</article>
+}

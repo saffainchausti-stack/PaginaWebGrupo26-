@@ -1,0 +1,39 @@
+package views
+
+import (
+    "ServidorTrabajoWeb/db/sqlc"
+)
+
+templ RecetaList(recetas []db.ListRecetaRow) {
+	<article>
+		<header>
+			<h2>Listado de Recetas</h2>
+		</header>
+		if len(recetas) == 0 {
+			<p><em>No hay recetas cargadas todavía. ¡Sé el primero en agregar una!</em></p>
+		} else {
+			<div class="overflow-auto">
+				<table class="striped">
+					<thead>
+						<tr>
+							<th scope="col">Nombre</th>
+							<th scope="col">Descripción</th>
+							<th scope="col">Ingredientes</th>
+							<th scope="col">Pasos</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, r := range recetas {
+							<tr>
+								<td><strong>{ r.Nombre }</strong></td>
+								<td>{ r.Descripcion }</td>
+								<td>{ r.Ingredientes }</td>
+								<td>{ r.Pasos }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</article>
+}
