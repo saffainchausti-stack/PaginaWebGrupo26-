@@ -19,8 +19,7 @@ build:
 rmsqlc:
 	@rm -rf db/sqlc
 
-api: rmsqlc down generate build up
-	@go run .
+run-app: rmsqlc down generate up
 
 test: rmsqlc down generate build up 
 	@go test -v -count=1 ./test; \
