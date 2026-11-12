@@ -4,9 +4,9 @@
 
 Para clonar y correr el proyecto en la rama de entrega `tp5`:
 
-git clone -b tp5 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git
-cd PaginaWebGrupo26-
-make run-app
+git clone -b tp5 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git  
+cd PaginaWebGrupo26-  
+make run-app  
 
 ## Requisitos
 - Go (1.23+)
