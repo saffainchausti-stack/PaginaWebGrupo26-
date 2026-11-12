@@ -1,6 +1,6 @@
 # Documentación del proyecto
 
-## Persistencia
+# 1. Persistencia
 
 La aplicación utiliza PostgreSQL como sistema de gestión de base de datos para mantener la información de la aplicación.
 
@@ -170,7 +170,7 @@ Para ejecutar los tests de persistencia se requiere contar con:
 
 El código generado por sqlc no necesita estar previamente generado para ejecutar el proceso de testing, ya que el `Makefile` lo genera automáticamente.
 
-## 2. Capa de Aplicación y API REST
+# 2. Capa de Aplicación y API REST
 
 ### Especificación de Endpoints
 
@@ -253,3 +253,37 @@ Utilizando la herramienta **Hurl**, se ejecutan 23 casos de prueba:
 | `make down` | Detiene y borra los contenedores y volúmenes creados. |
 | `make generate` | Ejecuta `sqlc generate`. |
 | `make build` | Compila el código fuente de Go. |
+
+
+# 3. Renderizado del Lado del Servidor con Templ
+
+1. **Arquitectura Server-Side Rendering (SSR):**
+   - Se abandonó el esquema de endpoints que retornaban JSON para la interfaz de usuario.
+   - Todo el HTML se genera dinámicamente en el servidor en Go utilizando componentes compilados con **Templ**.
+2. **Componentes Creados:**
+   - `views/layout.templ`: Estructura HTML común (etiquetas `<html>`, `<head>`, `<body>`, importación de tipografías y el framework CSS Pico.css).
+   - `views/entity_form.templ`: Componente que contiene el formulario HTML (`<form action="/receta" method="POST">`) para publicar una nueva receta.
+   - `views/entity_list.templ`: Tabla responsiva que renderiza el listado `[]db.ListRecetaRow`.
+   - `views/index.templ`: Vista principal que ensambla el layout, el formulario y la tabla de recetas.
+3. **Patrón Post/Redirect/Get (PRG):**
+   - Cuando el usuario envía el formulario (`POST /receta`), el servidor valida y persiste los datos en PostgreSQL mediante `queries.CreateReceta`.
+   - Inmediatamente después responde con una redirección HTTP `303 See Other` hacia `/`.
+   - El navegador realiza un `GET /`, provocando que el handler principal consulte las recetas actualizadas y devuelva la página completa recién renderizada.
+
+### Resumen de modificaciones realizadas
+
+1. **`db/schema/schema.sql`**:
+   - Se agregó un `INSERT` inicial de un usuario por defecto (ID 1: "Chef Principal"). Al levantar la base de datos limpia en Docker, la tabla `usuario` quedaba vacía y cualquier intento de crear una receta disparaba el error de violación de clave foránea.
+
+2. **`main.go`**:
+   - Se limpiaron los endpoints anteriores de API REST que devolvían JSON.
+   - Se configuraron los dos handlers principales:
+     - `GET /`: consulta las recetas con `queries.ListReceta` y renderiza el componente `views.Index(recetas)`.
+     - `POST /receta`: parsea el formulario HTML, valida campos no vacíos, inserta la receta con `queries.CreateReceta` asignando el ID de usuario por defecto y redirige con `http.StatusSeeOther` (303) a `/`.
+
+3. **`Makefile`**:
+   - Se incorporó `templ generate` junto con `sqlc generate`.
+   - Se configuró el comando `make run-app` que ejecuta las 3 etapas pedidas en la cosigna:
+     1. Tareas previas (borrado de contenedores y volúmenes anteriores, regeneración de código, compilación).
+     2. Ejecución (`docker compose up --build`).
+     3. Tareas posteriores (mediante `trap`, garantiza que al cortar la ejecución con `Ctrl+C` se ejecute `docker compose down -v` eliminando contenedores y volúmenes).

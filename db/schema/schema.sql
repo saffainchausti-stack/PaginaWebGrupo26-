@@ -26,3 +26,8 @@ CREATE TABLE IF NOT EXISTS comentario (
     FOREIGN KEY (id_receta) REFERENCES receta(id_receta) ON DELETE CASCADE
 );
 
+-- Usuario inicial para poder asociar recetas
+INSERT INTO usuario (id_usuario, contrasenia, nombre, apellido, email)
+OVERRIDING SYSTEM VALUE
+VALUES (1, 'demo123', 'Chef', 'Principal', 'chef@recetas.com')
+ON CONFLICT (id_usuario) DO NOTHING;

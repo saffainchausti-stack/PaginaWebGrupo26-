@@ -1,14 +1,11 @@
 package views
 
-import "fmt"
-
-templ RecetaForm(idUsuario int32) {
+templ RecetaForm() {
 	<article id="div-receta">
 		<header>
 			<h2>Ingresar receta</h2>
 		</header>
-		<!-- Apunta a /receta/{idUsuario} -->
-		<form action={ templ.SafeURL(fmt.Sprintf("/receta/%d", idUsuario)) } method="POST">
+		<form action="/receta" method="POST">
 			<label for="nombre">
 				Nombre:
 				<input type="text" id="nombre" name="nombre" placeholder="Ej: Pizza Casera" required/>

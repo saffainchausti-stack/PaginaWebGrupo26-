@@ -1,19 +1,16 @@
-# Trabajo Práctico 4: Construyendo la Interfaz de Usuario
+# Trabajo Práctico 5: Renderizado del Lado del Servidor con Templ
 
-## Ejecución y Pruebas de hurl  
+## Ejecución de la Aplicación
 
-Para clonar y probar el proyecto en el branch `tp3`:  
-git clone -b tp3 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git  
-cd PaginaWebGrupo26-  
-make test-api  
+Para clonar y correr el proyecto en la rama de entrega `tp5`:
 
-## En caso de querer probar los test sobre persistencia
-
-make test
+git clone -b tp5 https://github.com/saffainchausti-stack/PaginaWebGrupo26-.git
+cd PaginaWebGrupo26-
+make run-app
 
 ## Requisitos
-
-- Go (versión 1.25)
+- Go (1.23+)
 - Docker y Docker Compose
-- sqlc (go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest)
-- Hurl (https://hurl.dev/docs/installation.html)
+- sqlc (`go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`)
+- templ (`go install github.com/a-h/templ/cmd/templ@latest`)
+

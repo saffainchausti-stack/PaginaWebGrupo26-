@@ -7,11 +7,11 @@ import (
 templ Index(recetas []db.ListRecetaRow) {
 	@Layout("Página de Recetas") {
 		<hgroup>
-			<h1>Pagina de recetasssss!!!</h1>
-			<p>Gestión de recetas con Server-Side Rendering en Go</p>
+			<h1>Página de Recetas</h1>
+			<p>Gestión de recetas con Server-Side Rendering en Go y Templ</p>
 		</hgroup>
 		
-		@RecetaForm(2)
+		@RecetaForm()
 		@RecetaList(recetas)
 	}
 }

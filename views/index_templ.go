@@ -42,11 +42,11 @@ func Index(recetas []db.ListRecetaRow) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<hgroup><h1>Pagina de recetasssss!!!</h1><p>Gestión de recetas con Server-Side Rendering en Go</p></hgroup>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<hgroup><h1>Página de Recetas</h1><p>Gestión de recetas con Server-Side Rendering en Go y Templ</p></hgroup>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = RecetaForm(2).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RecetaForm().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

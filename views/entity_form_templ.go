@@ -9,9 +9,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "fmt"
-
-func RecetaForm(idUsuario int32) templ.Component {
+func RecetaForm() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -28,20 +26,7 @@ func RecetaForm(idUsuario int32) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<article id=\"div-receta\"><header><h2>Ingresar receta</h2></header><!-- Apunta a /receta/{idUsuario} --><form action=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(fmt.Sprintf("/receta/%d", idUsuario))).ResolveURL(ctx)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_form.templ`, Line: 11, Col: 68}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" method=\"POST\"><label for=\"nombre\">Nombre: <input type=\"text\" id=\"nombre\" name=\"nombre\" placeholder=\"Ej: Pizza Casera\" required></label> <label for=\"descripcion\">Descripción: <input type=\"text\" id=\"descripcion\" name=\"descripcion\" placeholder=\"Breve descripción de la receta\" required></label> <label for=\"ingredientes\">Ingredientes: <input type=\"text\" id=\"ingredientes\" name=\"ingredientes\" placeholder=\"Harina, levadura, agua, queso...\" required></label> <label for=\"pasos\">Pasos: <input type=\"text\" id=\"pasos\" name=\"pasos\" placeholder=\"1. Amasar, 2. Leudar, 3. Hornear...\" required></label><div class=\"grid\"><button type=\"reset\" class=\"secondary\">Limpiar</button> <button type=\"submit\">Enviar</button></div></form></article>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<article id=\"div-receta\"><header><h2>Ingresar receta</h2></header><form action=\"/receta\" method=\"POST\"><label for=\"nombre\">Nombre: <input type=\"text\" id=\"nombre\" name=\"nombre\" placeholder=\"Ej: Pizza Casera\" required></label> <label for=\"descripcion\">Descripción: <input type=\"text\" id=\"descripcion\" name=\"descripcion\" placeholder=\"Breve descripción de la receta\" required></label> <label for=\"ingredientes\">Ingredientes: <input type=\"text\" id=\"ingredientes\" name=\"ingredientes\" placeholder=\"Harina, levadura, agua, queso...\" required></label> <label for=\"pasos\">Pasos: <input type=\"text\" id=\"pasos\" name=\"pasos\" placeholder=\"1. Amasar, 2. Leudar, 3. Hornear...\" required></label><div class=\"grid\"><button type=\"reset\" class=\"secondary\">Limpiar</button> <button type=\"submit\">Enviar</button></div></form></article>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

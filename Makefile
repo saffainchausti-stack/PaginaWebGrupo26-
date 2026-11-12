@@ -2,34 +2,28 @@
 
 #DB_URL := postgres://usuario:password@localhost:5432/mydb?sslmode=disable
 
-.PHONY: up down generate build exetest test rmsqlc
+.PHONY: run-app test clean generate-all build-app up-db down
 
-up:
-	@docker compose up -d --wait --build 
+generate-all:
+	@rm -rf db/sqlc
+	@sqlc generate
+	@templ generate
+
+build-app: generate-all
+	@go build -o bin/api .
 
 down:
 	@docker compose down -v
 
-generate:
-	@sqlc generate
+run-app: down generate-all
+	@echo "==> Iniciando contenedores (Base de datos y Web)..."
+	@trap 'docker compose down -v' EXIT INT TERM; \
+	docker compose up --build
 
-build:
-	@go build ./...
-
-rmsqlc:
-	@rm -rf db/sqlc
-
-run-app: rmsqlc down generate up
-
-test: rmsqlc down generate build up 
-	@go test -v -count=1 ./test; \
-	status=$$?; \
-	docker compose down -v; \
-	exit $$status
-
-test-api: rmsqlc down generate build
-	@docker compose up -d --build --wait; \
-	hurl --test requests.hurl; \
+# Tests de persistencia
+test: down generate-all
+	@docker compose up -d database --wait; \
+	go test -v -count=1 ./tests; \
 	status=$$?; \
 	docker compose down -v; \
 	exit $$status
