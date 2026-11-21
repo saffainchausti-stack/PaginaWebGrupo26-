@@ -104,6 +104,11 @@ func postReceta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Patrón PRG: Redirigir a "/" con código 303 (See Other)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	recetas, err := queries.ListReceta(r.Context())
+	if err != nil {
+		http.Error(w, "Error al listar recetas", http.StatusInternalServerError)
+		return
+	}
+
+	views.RecetaList(recetas).Render(r.Context(), w)
 }
