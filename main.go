@@ -110,5 +110,5 @@ func postReceta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	views.RecetaList(recetas).Render(r.Context(), w)
+	views.Index(recetas).Render(r.Context(), w)
 }
