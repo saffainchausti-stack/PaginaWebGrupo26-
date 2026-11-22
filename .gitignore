@@ -6,5 +6,6 @@ db/sqlc/
 bin/
 # Logs
 *.log
-
+# Boceto
+img.md
 Backup

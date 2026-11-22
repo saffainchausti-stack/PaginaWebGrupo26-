@@ -2,6 +2,7 @@ package main
 
 import (
 	sqlc "ServidorTrabajoWeb/db/sqlc"
+	"ServidorTrabajoWeb/handlers"
 	"ServidorTrabajoWeb/views"
 	"database/sql"
 	"fmt"
@@ -41,6 +42,15 @@ func main() {
 	defer db.Close()
 	queries = sqlc.New(db)
 
+	handlerRecetas := handlers.NewRecetasHandler(queries)
+	http.Handle("/recetas", handlerRecetas)
+
+	handlerLogin := handlers.NewLoginHandler(queries)
+	http.Handle("/login", handlerLogin)
+
+	handlerSignIn := handlers.NewSignInHandler(queries)
+	http.Handle("/", handlerSignIn)
+
 	http.HandleFunc("GET /", indexHandler)
 	// Manejador POST /receta
 	http.HandleFunc("POST /receta", postReceta)
@@ -49,6 +59,7 @@ func main() {
 
 	port := ":8080"
 	fmt.Printf("Servidor escuchando en http://localhost%s\n", port)
+
 	err = http.ListenAndServe(port, nil)
 	if err != nil {
 		log.Fatalf("Error al iniciar el servidor: %s\n", err)
