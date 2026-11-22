@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -43,6 +44,8 @@ func main() {
 	http.HandleFunc("GET /", indexHandler)
 	// Manejador POST /receta
 	http.HandleFunc("POST /receta", postReceta)
+
+	http.HandleFunc("DELETE /receta/", deleteReceta)
 
 	port := ":8080"
 	fmt.Printf("Servidor escuchando en http://localhost%s\n", port)
@@ -110,5 +113,34 @@ func postReceta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	views.Index(recetas).Render(r.Context(), w)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := views.RecetaList(recetas).Render(r.Context(), w); err != nil {
+		log.Printf("Error al renderizar lista de recetas: %v\n", err)
+	}
+}
+
+func deleteReceta(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/receta/"))
+	if err != nil || id <= 0 {
+		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
+
+	if err := queries.DeleteReceta(r.Context(), int32(id)); err != nil {
+		log.Printf("Error al eliminar receta: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	recetas, err := queries.ListReceta(r.Context())
+	if err != nil {
+		log.Printf("Error al listar recetas: %v\n", err)
+		http.Error(w, "Error al listar recetas", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := views.RecetaList(recetas).Render(r.Context(), w); err != nil {
+		log.Printf("Error al renderizar lista de recetas: %v\n", err)
+	}
 }

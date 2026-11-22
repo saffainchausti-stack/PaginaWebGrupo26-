@@ -2,6 +2,7 @@ package views
 
 import (
     "ServidorTrabajoWeb/db/sqlc"
+	"fmt"
 )
 
 templ RecetaList(recetas []db.ListRecetaRow) {
@@ -30,6 +31,10 @@ templ RecetaList(recetas []db.ListRecetaRow) {
 								<td>{ r.Ingredientes }</td>
 								<td>{ r.Pasos }</td>
 							</tr>
+							<button class="secondary outline"
+										hx-delete={ fmt.Sprintf("/receta/%d", r.IDReceta) }
+										hx-target="#lista_entidades"
+										hx-swap="outerHTML">X</button>
 						}
 					</tbody>
 				</table>
