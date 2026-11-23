@@ -6,7 +6,7 @@ import (
 )
 
 templ RecetaList(recetas []db.ListRecetaRow) {
-	<article id="lista_entidades">
+	<article>
 		<header>
 			<h2>Listado de Recetas</h2>
 		</header>
@@ -31,8 +31,42 @@ templ RecetaList(recetas []db.ListRecetaRow) {
 								<td>{ r.Ingredientes }</td>
 								<td>{ r.Pasos }</td>
 							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</article>
+}
+
+templ RecetaByIdUsuarioList(recetas []db.ListRecetaByUsuarioRow) {
+	<article id="lista_entidades">
+		<header>
+			<h2>Mi listado de Recetas</h2>
+		</header>
+		if len(recetas) == 0 {
+			<p><em>No tienes recetas cargadas todavía. ¡Agrega una!</em></p>
+		} else {
+			<div class="overflow-auto">
+				<table class="striped">
+					<thead>
+						<tr>
+							<th scope="col">Nombre</th>
+							<th scope="col">Descripción</th>
+							<th scope="col">Ingredientes</th>
+							<th scope="col">Pasos</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, r := range recetas {
+							<tr>
+								<td><strong>{ r.Nombre }</strong></td>
+								<td>{ r.Descripcion }</td>
+								<td>{ r.Ingredientes }</td>
+								<td>{ r.Pasos }</td>
+							</tr>
 							<button class="secondary outline"
-										hx-delete={ fmt.Sprintf("/receta/%d", r.IDReceta) }
+										hx-delete={ fmt.Sprintf("/myRecetas/%d", r.IDReceta) }
 										hx-target="#lista_entidades"
 										hx-swap="outerHTML">X</button>
 						}

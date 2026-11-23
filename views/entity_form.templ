@@ -5,7 +5,7 @@ templ RecetaForm() {
 		<header>
 			<h2>Ingresar receta</h2>
 		</header>
-		<form hx-post="/receta" hx-target="#lista_entidades" hx-swap="outerHTML">
+		<form hx-post="/myRecetas" hx-target="#lista_entidades" hx-swap="outerHTML">
 			<label for="nombre">
 				Nombre:
 				<input type="text" id="nombre" name="nombre" placeholder="Ej: Pizza Casera" required/>

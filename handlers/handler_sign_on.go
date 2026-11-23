@@ -7,16 +7,20 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type SignInHandler struct {
+type SignOnHandler struct {
 	queries *db.Queries
 }
 
-func NewSignInHandler(q *db.Queries) *SignInHandler {
-	return &SignInHandler{queries: q}
+func NewSignOnHandler(q *db.Queries) *SignOnHandler {
+	return &SignOnHandler{queries: q}
 }
 
-func (h *SignInHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
+func (h *SignOnHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		http.ServeFile(w, r, "./static/signOn.html")
+		return
+	} else if r.Method == http.MethodPost {
 		nombre := r.FormValue("name")
 		apellido := r.FormValue("surname")
 		email := r.FormValue("email")
@@ -34,9 +38,10 @@ func (h *SignInHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	} else {
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	http.ServeFile(w, r, "./static/login.html")
 }

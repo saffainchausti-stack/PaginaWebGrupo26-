@@ -40,7 +40,6 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		http.ServeFile(w, r, "./static/login.html")
-
 	} else if r.Method == http.MethodPost {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
@@ -76,7 +75,7 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		http.Redirect(w, r, "/recetas", http.StatusSeeOther)
+		http.Redirect(w, r, "/myRecetas", http.StatusSeeOther)
 	} else {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return

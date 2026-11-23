@@ -4,14 +4,14 @@ import (
     "ServidorTrabajoWeb/db/sqlc"
 )
 
-templ Index(recetas []db.ListRecetaRow) {
+templ MyRecetas(recetas []db.ListRecetaByUsuarioRow) {
 	@Layout("Página de Recetas") {
 		<hgroup>
-			<h1>Página de Recetas</h1>
+			<h1>Página de Mis Recetas</h1>
 			<p>Gestión de recetas con Server-Side Rendering en Go y Templ</p>
 		</hgroup>
 		
 		@RecetaForm()
-		@RecetaList(recetas)
+		@RecetaByIdUsuarioList(recetas)
 	}
 }

@@ -13,7 +13,7 @@ import (
 	"ServidorTrabajoWeb/db/sqlc"
 )
 
-func Index(recetas []db.ListRecetaRow) templ.Component {
+func MyRecetas(recetas []db.ListRecetaByUsuarioRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -42,7 +42,7 @@ func Index(recetas []db.ListRecetaRow) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<hgroup><h1>Página de Recetas</h1><p>Gestión de recetas con Server-Side Rendering en Go y Templ</p></hgroup>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<hgroup><h1>Página de Mis Recetas</h1><p>Gestión de recetas con Server-Side Rendering en Go y Templ</p></hgroup>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -50,7 +50,7 @@ func Index(recetas []db.ListRecetaRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = RecetaList(recetas).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = RecetaByIdUsuarioList(recetas).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

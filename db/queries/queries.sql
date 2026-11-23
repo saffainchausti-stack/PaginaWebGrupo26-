@@ -3,6 +3,11 @@ SELECT id_usuario, nombre, apellido, email
 FROM usuario
 WHERE id_usuario = $1;
 
+-- name: GetIdUsuarioEmailContrasenia :one
+SELECT id_usuario
+FROM usuario
+WHERE email = $1 AND contrasenia = $2;
+
 -- name: GetContrasenia :one
 SELECT id_usuario, contrasenia
 FROM usuario
