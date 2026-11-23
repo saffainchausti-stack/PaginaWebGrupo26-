@@ -287,3 +287,58 @@ Utilizando la herramienta **Hurl**, se ejecutan 23 casos de prueba:
      1. Tareas previas (borrado de contenedores y volúmenes anteriores, regeneración de código, compilación).
      2. Ejecución (`docker compose up --build`).
      3. Tareas posteriores (mediante `trap`, garantiza que al cortar la ejecución con `Ctrl+C` se ejecute `docker compose down -v` eliminando contenedores y volúmenes).
+
+# 4. Interfaces Dinámicas con HTMX
+
+1. **Integración de HTMX sin JavaScript propio:**
+   - Incorporamos la librería **HTMX (`htmx.org@4.0.0`)** mediante CDN dentro de la etiqueta `<head>` en `views/layout.templ`.
+   - Toda la reactividad del lado del cliente se resuelve de forma declarativa con atributos `hx-*` en los templates HTML/Templ, manteniendo el repositorio libre de archivos `.js`.
+
+2. **Creación de Recetas sin Recarga de Página:**
+   - Reemplazamos el envío clásico del formulario por atributos HTMX en `views/entity_form.templ` (`hx-post="/myRecetas"`, `hx-target="#lista_entidades"`, `hx-swap="outerHTML"`).
+   - En el servidor (`postReceta` en `handlers/handler_myRecetas.go`), eliminamos la redirección del patrón PRG: tras validar la sesión e insertar la receta en PostgreSQL con `CreateReceta`, se vuelve a consultar la lista actualizada del usuario (`ListRecetaByUsuario`) y se devuelve únicamente el fragmento HTML del listado (`views.RecetaByIdUsuarioList`) para que HTMX reemplace el contenedor `#lista_entidades` sin recargar la página.
+
+3. **Borrado de Recetas sin Recarga de Página:**
+   - En `views/entity_list.templ` (`RecetaByIdUsuarioList`), cada receta cuenta con un botón configurado con `hx-delete` hacia `/myRecetas/{id}`, `hx-target="#lista_entidades"` y `hx-swap="outerHTML"`.
+   - El handler `deleteReceta` extrae el `id` desde la URL, ejecuta `DeleteReceta` mediante `sqlc` y retorna nuevamente el fragmento HTML actualizado de la tabla para reflejar la eliminación de forma instantánea en la vista.
+
+4. **Gestión de Usuarios, Autenticación y Sesiones:**
+   - Incorporamos un inicio de sesión para que cada usuario administre sus propias recetas:
+     - **Registro (`/signOn`):** alta de usuarios en la base de datos mediante `CreateUsuario`.
+     - **Login (`/login`):** validación de credenciales con `GetIdUsuarioEmailContrasenia`, generación de un token único con `github.com/google/uuid`, almacenamiento de la sesión en memoria (`sessions`) con vigencia de 1 hora y envío de la cookie `session_token` (`HttpOnly`, `SameSite=Lax`).
+     - **Control de acceso en `/myRecetas`:** validación de la cookie y expiración de la sesión en cada operación (`GET`, `POST`, `DELETE`) para listar y gestionar únicamente las recetas del usuario autenticado.
+
+### Resumen de modificaciones realizadas
+
+1. **`views/layout.templ`**:
+   - Agregamos la carga de HTMX (`htmx.org@4.0.0`) en el `<head>` junto con Pico.css y las tipografías.
+   - Incorporamos un botón `Back` para regresar a la página principal (`/`).
+
+2. **`views/entity_form.templ`**:
+   - Actualizamos el `<form>` de `RecetaForm()` quitando `action`/`method` tradicionales y agregando `hx-post="/myRecetas"`, `hx-target="#lista_entidades"` y `hx-swap="outerHTML"`.
+
+3. **`views/entity_list.templ`**:
+   - Agregamos el componente `RecetaByIdUsuarioList(recetas []db.ListRecetaByUsuarioRow)` con el contenedor `id="lista_entidades"` y el botón de eliminación por receta usando `hx-delete="/myRecetas/{id}"`, `hx-target="#lista_entidades"` y `hx-swap="outerHTML"`.
+
+4. **`views/myRecetas.templ`** (reemplaza a `views/index.templ`):
+   - Creamos el componente `MyRecetas(recetas []db.ListRecetaByUsuarioRow)` que genera `Layout`, `RecetaForm` y `RecetaByIdUsuarioList`.
+
+5. **`handlers/`**:
+   - **`handlers/handler_index.go`**: sirve las vistas estáticas de inicio (`/` -> `static/index.html`) y descripción del proyecto (`/about` -> `static/about.html`).
+   - **`handlers/handler_sign_on.go`**: maneja `GET /signOn` y `POST /signOn` para el registro de nuevos usuarios.
+   - **`handlers/handler_login.go`**: maneja `GET /login` y `POST /login`, administra el mapa de sesiones en memoria y emite la cookie `session_token`.
+   - **`handlers/handler_myRecetas.go`**: implementa `RecetasHandler` para `GET /myRecetas`, `POST /myRecetas` y `DELETE /myRecetas/{id}`, validando la sesión del usuario y devolviendo la vista completa o los fragmentos HTML para HTMX.
+
+6. **`static/`**:
+   - Agregamos las páginas estáticas `index.html`, `about.html`, `login.html` y `signOn.html`, junto con la hoja de estilos `static/CSS/styles.css`.
+
+7. **`db/schema/schema.sql` y `db/queries/queries.sql`**:
+   - Borramos el `INSERT` del usuario fijo por defecto en `schema.sql`, dado que ahora los usuarios se crean desde `/signOn`.
+   - Agregamos la consulta `GetIdUsuarioEmailContrasenia` en `queries.sql` para la autenticación en el login.
+
+8. **`main.go`**:
+   - Modificamos el main para conectar con PostgreSQL e instanciar y registrar los handlers del paquete `handlers` en las rutas `/`, `/about`, `/myRecetas`, `/myRecetas/`, `/login` y `/signOn`.
+
+9. **`go.mod`, `Dockerfile` y `Makefile`**:
+   - Agregamos la dependencia `github.com/google/uuid` en `go.mod` (Go `1.26`) y actualizamos la etapa de compilación del `Dockerfile` a `golang:1.26-alpine`.
+   - En el `Makefile` quedaron los targets `generate-all` (`sqlc generate` + `templ generate`), `build-app`, `down`, `test` y `run-app` (automatizando limpieza previa, generación de código, `docker compose up --build` y limpieza final con `trap`).

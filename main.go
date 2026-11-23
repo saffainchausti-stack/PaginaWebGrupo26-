@@ -39,6 +39,8 @@ func main() {
 	defer db.Close()
 	queries = sqlc.New(db)
 
+	http.Handle("/CSS/", http.FileServer(http.Dir("./static")))
+
 	http.HandleFunc("/", handlers.IndexHandler)
 
 	http.HandleFunc("/about", handlers.AboutHandler)

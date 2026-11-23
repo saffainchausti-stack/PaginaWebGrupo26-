@@ -143,7 +143,7 @@ func RecetaByIdUsuarioList(recetas []db.ListRecetaByUsuarioRow) templ.Component 
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"overflow-auto\"><table class=\"striped\"><thead><tr><th scope=\"col\">Nombre</th><th scope=\"col\">Descripción</th><th scope=\"col\">Ingredientes</th><th scope=\"col\">Pasos</th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"overflow-auto\"><table class=\"striped\"><thead><tr><th scope=\"col\">Nombre</th><th scope=\"col\">Descripción</th><th scope=\"col\">Ingredientes</th><th scope=\"col\">Pasos</th><th scope=\"col\">Eliminar</th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -155,7 +155,7 @@ func RecetaByIdUsuarioList(recetas []db.ListRecetaByUsuarioRow) templ.Component 
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(r.Nombre)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 63, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 64, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -168,7 +168,7 @@ func RecetaByIdUsuarioList(recetas []db.ListRecetaByUsuarioRow) templ.Component 
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(r.Descripcion)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 64, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 65, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -181,7 +181,7 @@ func RecetaByIdUsuarioList(recetas []db.ListRecetaByUsuarioRow) templ.Component 
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(r.Ingredientes)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 65, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 66, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -194,26 +194,26 @@ func RecetaByIdUsuarioList(recetas []db.ListRecetaByUsuarioRow) templ.Component 
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(r.Pasos)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 66, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 67, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</td></tr><button class=\"secondary outline\" hx-delete=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</td><td><button class=\"secondary outline\" hx-delete=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templruntime.NewAttributeExpression(fmt.Sprintf("/myRecetas/%d", r.IDReceta)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 69, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/entity_list.templ`, Line: 70, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" hx-target=\"#lista_entidades\" hx-swap=\"outerHTML\">X</button>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" hx-target=\"#lista_entidades\" hx-swap=\"outerHTML\">X</button></td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

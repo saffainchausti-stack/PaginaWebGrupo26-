@@ -9,7 +9,7 @@ cd PaginaWebGrupo26-
 make run-app  
 
 ## Requisitos
-- Go (1.23+)
+- Go (1.26+)
 - Docker y Docker Compose
 - sqlc (`go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`)
 - templ (`go install github.com/a-h/templ/cmd/templ@latest`)
