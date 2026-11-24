@@ -1,4 +1,4 @@
-# Trabajo Práctico 6: Renderizado del Lado del Servidor con Templ
+# Trabajo Práctico 6: Interfaces Reactivas con HTMX
 
 ## Ejecución de la Aplicación
 
